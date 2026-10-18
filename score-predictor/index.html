@@ -111,6 +111,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
     <p class="note">Every prediction is locked at kick-off and checked against the final score.</p>
   </section>
   <div id="games" class="games"><div class="empty">Loading this gameweek's predictions…</div></div>
+  <section class="panel" id="btPanel" hidden>
+    <h2>Backtest</h2>
+    <p class="small muted">Every game played so far this season, predicted using only what was known before kick-off (matches already played plus last season). Missing players weren't included, because past team news isn't available.</p>
+    <div class="tablewrap"><table id="btSummary"></table></div>
+    <p class="small muted">Brier score measures how good the win, draw and loss chances were. Lower is better, and 0.667 is the same as guessing.</p>
+    <details><summary class="small">See every game</summary><div class="tablewrap" style="margin-top:8px"><table id="btGames"></table></div></details>
+  </section>
   <section class="panel" id="ratingsPanel" hidden>
     <h2>Team ratings</h2>
     <p class="small muted">1.00 is league average. Attack above 1 scores more than average; defence below 1 concedes less. Built from expected goals this season, blended with last season while the sample is small.</p>
@@ -183,6 +190,15 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
       </article>`;
     }
     $("games").innerHTML = html || `<div class="empty">No games found for this gameweek.</div>`;
+
+    const bt = d.backtest;
+    if (bt) {
+      $("btPanel").hidden = false;
+      const s = bt.summary, b = bt.baselines;
+      const row = (name, right, brier, exact) => `<tr><td>${name}</td><td class="n">${right}/${s.games} (${Math.round(right / s.games * 100)}%)</td><td class="n">${exact ?? "–"}</td><td class="n">${brier.toFixed(3)}</td></tr>`;
+      $("btSummary").innerHTML = `<thead><tr><th></th><th class="n">Results right</th><th class="n">Exact</th><th class="n">Brier score</th></tr></thead><tbody>${row("<b>Full Time</b>", s.right, s.brier, s.exact)}${row("Always back the home team", b.always_home.right, b.always_home.brier)}${row("Coin flip", b.coin_flip.right, b.coin_flip.brier)}</tbody>`;
+      $("btGames").innerHTML = `<thead><tr><th>GW</th><th>Game</th><th class="n">Predicted</th><th class="n">Result</th><th></th></tr></thead><tbody>${bt.games.map(g => `<tr><td class="n">${g.gw}</td><td>${esc(g.match)}</td><td class="n">${g.pred[0]}-${g.pred[1]}</td><td class="n">${g.result[0]}-${g.result[1]}</td><td style="color:var(--${g.right ? "good" : "bad"})">${g.exact ? "Exact" : g.right ? "Right" : "Wrong"}</td></tr>`).join("")}</tbody>`;
+    }
 
     const r = Object.entries(d.ratings || {}).sort((a, b) => (b[1].attack - b[1].defence) - (a[1].attack - a[1].defence));
     if (r.length) {

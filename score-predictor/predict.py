@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 FPL = "https://fantasy.premierleague.com/api/"
 FOTMOB = "https://www.fotmob.com/api/data/"
-PRIOR_GAMES = 8      # weight of last season's per-game rates, in games
+PRIOR_GAMES = 12     # weight of last season's per-game rates, in games (backtested: 12 beat 4 and 8)
 XG_WEIGHT = 0.75     # this season: mix of expected goals and actual goals
 HOME, AWAY = 1.10, 0.92
 RHO = -0.06          # Dixon-Coles correction for 0-0, 1-0, 0-1 and 1-1
@@ -149,7 +149,8 @@ def main(out_path, prev_path=None):
         if started and f["id"] in prev and prev[f["id"]].get("pred"):
             games.append({**base, "pred": prev[f["id"]]["pred"]})
             continue
-        if started and f["id"] not in prev:
+        if started:
+            # Never predict a game after kick-off: without a pre-match prediction it stays blank.
             games.append({**base, "pred": None})
             continue
         lh = avg * (rating[h]["for"] / avg) * (rating[a]["against"] / avg) * HOME * attack_factor(h)
@@ -194,7 +195,16 @@ def main(out_path, prev_path=None):
             history[g["id"]] = {"gw": g["gw"], "match": f"{g['home_short']} v {g['away_short']}", "result": g["result"],
                                 "pred": ps, "right_result": res == pres, "exact": [hs, as_] == ps}
 
+    backtest = None
+    if prev_path:
+        try:
+            with open(prev_path) as f:
+                backtest = json.load(f).get("backtest")
+        except Exception:
+            backtest = None
+
     out = {
+        "backtest": backtest,
         "season": season,
         "updatedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "ratings": {teams[t]["short_name"]: {"attack": round(r["for"] / avg, 2), "defence": round(r["against"] / avg, 2)} for t, r in rating.items()},
