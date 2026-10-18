@@ -273,8 +273,18 @@ def main(entry_id, d, out_path):
         cap_xp = proj[xi["captain"]][gi]["xp"]
         chip_view[g] = {"bench_xp": round(bench_xp, 1), "captain": E[xi["captain"]]["web_name"], "captain_xp": round(cap_xp, 1)}
 
+    # Has the gameweek before the next deadline finished? Recommendations wait until it has.
+    cur = next((ev for ev in b["events"] if ev["is_current"]), None)
+    cur_fx = [f for f in fixtures if cur and f["event"] == cur["id"]]
+    current_complete = bool(cur) and all(f["finished"] for f in cur_fx)
+    last_kickoff = max((f["kickoff_time"] for f in cur_fx if f["kickoff_time"]), default=None)
+
     out = {
         "entry": entry_id,
+        "current_gw": cur["id"] if cur else None,
+        "current_complete": current_complete,
+        "current_last_kickoff": last_kickoff,
+        "current_games_left": sum(1 for f in cur_fx if not f["finished_provisional"]),
         "team_name": entry["name"],
         "manager": entry["player_first_name"],
         "overall_rank": entry["summary_overall_rank"],

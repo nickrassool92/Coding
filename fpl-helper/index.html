@@ -131,6 +131,7 @@ td.fx { padding: 0 2px; }
 .idea { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--hair); padding-bottom: 6px; flex-wrap: wrap; }
 .chipsgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .chipcard { border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.btn-peek { border: 1px solid var(--hair); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: 0.9rem; }
 .empty { border: 1px dashed var(--hair); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
 .foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
 @media (max-width: 460px) { .caps { grid-template-columns: 1fr; } .chipsgrid { grid-template-columns: 1fr; } }
@@ -164,7 +165,7 @@ td.fx { padding: 0 2px; }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const CHIP = { bboost: "Bench Boost", "3xc": "Triple Captain", wildcard: "Wildcard", freehit: "Free Hit" };
   const HIT = 4;
-  let data = null, chosen = null, timer = null;
+  let data = null, chosen = null, timer = null, peek = false;
 
   function fmtDeadline(iso) {
     const d = new Date(iso);
@@ -243,8 +244,9 @@ td.fx { padding: 0 2px; }
     // Fixture ticker for the squad after the plan
     const squad = [...rec.xi, ...rec.bench];
     const posOrder = { GKP: 0, DEF: 1, MID: 2, FWD: 3 };
-    const ticker = `<table><thead><tr><th>Player</th>${d.gws.map(g => `<th>GW${g}</th>`).join("")}</tr></thead><tbody>` +
-      [...squad].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]).map(p => `<tr><td><b>${esc(p.name)}</b> <span class="muted small">${esc(p.team)}</span></td>${p.fixtures.map(list => `<td class="fx">${list.length ? list.map(f => `<span class="chip d${f.fdr}">${esc(f.opp)} ${f.home ? "H" : "A"}</span>`).join("") : `<span class="chip d0">–</span>`}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+    const tickerFor = list => `<table><thead><tr><th>Player</th>${d.gws.map(g => `<th>GW${g}</th>`).join("")}</tr></thead><tbody>` +
+      [...list].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]).map(p => `<tr><td><b>${esc(p.name)}</b> <span class="muted small">${esc(p.team)}</span></td>${p.fixtures.map(list => `<td class="fx">${list.length ? list.map(f => `<span class="chip d${f.fdr}">${esc(f.opp)} ${f.home ? "H" : "A"}</span>`).join("") : `<span class="chip d0">–</span>`}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+    const ticker = tickerFor(squad);
 
     // Other single-transfer ideas
     const idea = i => {
@@ -262,7 +264,21 @@ td.fx { padding: 0 2px; }
     if (d.chips_left.includes("3xc") && bestTc) chipCards.push(`<div class="chipcard"><span class="label">Triple Captain</span><p>Best window in the next ${d.gws.length}: <b>Gameweek ${bestTc.g}</b>, ${esc(bestTc.captain)} at about ${bestTc.captain_xp.toFixed(1)} points. Hold it for a double gameweek if one is announced before Gameweek 19.</p></div>`);
     if (d.chips_left.includes("bboost") && bestBb) chipCards.push(`<div class="chipcard"><span class="label">Bench Boost</span><p>Your bench projects ${bestBb.bench_xp.toFixed(1)} points at best (Gameweek ${bestBb.g}). Strengthen the bench first, ideally for a double gameweek.</p></div>`);
 
-    $("main").innerHTML = `
+    // Hold the plan until the current gameweek is over, so results, bonus and injuries are in.
+    const waiting = d.current_complete === false && !peek;
+    const readyAt = d.current_last_kickoff ? new Date(new Date(d.current_last_kickoff).getTime() + 12 * 3600000) : null;
+    const waitPanel = `<section class="panel">
+        <h2>Gameweek ${d.current_gw} is still being played</h2>
+        <p>${d.current_games_left} game${d.current_games_left === 1 ? "" : "s"} left. Your Gameweek ${d.next_gw} transfers, captain and team will appear once the last game and its bonus points are in${readyAt ? `, by about ${esc(readyAt.toLocaleDateString("en-AU", { weekday: "long" }))} evening` : ""}. Results, injuries and price changes from these games can change the picks.</p>
+        <div><button class="btn-peek" id="peekBtn">Show an early look anyway</button></div>
+      </section>`;
+    const earlyNote = d.current_complete === false && peek ? `<div class="verdict hold">Early look: Gameweek ${d.current_gw} isn't finished yet, so these picks may change. <button class="btn-peek" id="hideBtn">Hide</button></div>` : "";
+    if (waiting) {
+      $("main").innerHTML = waitPanel + `<section class="panel"><div class="head"><h2>Fixtures</h2><span class="small muted">Green is easy, red is hard</span></div><div class="tablewrap">${tickerFor(d.squad)}</div></section>`;
+      $("peekBtn").onclick = () => { peek = true; render(); };
+      return;
+    }
+    $("main").innerHTML = earlyNote + `
       <section class="panel">
         <div class="head"><h2>Gameweek ${d.next_gw} transfers</h2>
           <div class="seg" role="group" aria-label="Free transfers you have">${[1, 2, 3, 4, 5].map(n => `<button data-ft="${n}" aria-pressed="${n === ft}">${n}</button>`).join("")}</div>
@@ -293,6 +309,7 @@ td.fx { padding: 0 2px; }
         <div class="ideas">${ideas}</div>
       </section>
       ${chipCards.length ? `<section class="panel"><h2>Chips</h2><div class="chipsgrid">${chipCards.join("")}</div></section>` : ""}`;
+    if ($("hideBtn")) $("hideBtn").onclick = () => { peek = false; render(); };
     for (const b of $("main").querySelectorAll("[data-ft]")) b.onclick = () => { chosen = Number(b.dataset.ft); try { localStorage.setItem("gaffer-ft-" + d.next_gw, String(chosen)); } catch {} render(); };
   }
 
