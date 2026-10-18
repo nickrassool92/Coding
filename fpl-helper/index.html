@@ -105,6 +105,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .badge { position: absolute; top: -8px; right: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 800; background: var(--ink); color: var(--bg); }
 .flag { position: absolute; top: -8px; left: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; display: grid; place-items: center; font-size: 0.68rem; font-weight: 800; background: var(--warn); color: var(--surface); }
 .flag.out { background: var(--bad); }
+.pl .rot { display: block; font-size: 0.68rem; font-weight: 700; color: var(--warn); }
 .bench { border-top: 1px dashed var(--hair); padding-top: 10px; }
 
 .caps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -221,7 +222,7 @@ td.fx { padding: 0 2px; }
         <span class="arrow" aria-hidden="true">→</span>
         <div class="side in"><span class="label">Buy</span><b class="in-name">${esc(m.in.name)}</b><span class="small muted">${esc(m.in.team)} · £${m.in.price.toFixed(1)}m</span></div>
         ${m.weekly ? `<div class="weeks" aria-label="Points gained each gameweek">${d.gws.map((g, i) => `<span class="${m.weekly[i] >= 0 ? "pos" : "neg"}">GW${g} ${m.weekly[i] >= 0 ? "+" : ""}${m.weekly[i].toFixed(1)}</span>`).join("")}</div>` : ""}
-        <p class="why">${esc(m.in.name)} projects ${m.in.xp5} points over the next ${d.gws.length} gameweeks against ${m.out.xp5} for ${esc(m.out.name)}, and has ${m.in.total} points so far (form ${m.in.form}). Next games: ${esc(m.in.fixtures.slice(0, 3).map(fx).join("; "))}.${m.alternatives.length ? ` Also good: ${m.alternatives.map(a => `${esc(a.in.name)} (${esc(a.in.team)}, £${a.in.price.toFixed(1)}m)`).join(", ")}.` : ""}</p>
+        <p class="why">${esc(m.in.name)} projects ${m.in.xp5} points over the next ${d.gws.length} gameweeks against ${m.out.xp5} for ${esc(m.out.name)}, and has ${m.in.total} points so far (form ${m.in.form}). Next games: ${esc(m.in.fixtures.slice(0, 3).map(fx).join("; "))}.${m.out.risk && m.out.risk.length ? ` ${esc(m.out.name)}: ${esc(m.out.risk.join("; "))}.` : ""}${m.in.risk && m.in.risk.length ? ` Watch ${esc(m.in.name)}: ${esc(m.in.risk.join("; "))}.` : ""}${m.alternatives.length ? ` Also good: ${m.alternatives.map(a => `${esc(a.in.name)} (${esc(a.in.team)}, £${a.in.price.toFixed(1)}m)`).join(", ")}.` : ""}</p>
       </div>`).join("");
 
     // Team sheet for the recommended plan
@@ -230,12 +231,15 @@ td.fx { padding: 0 2px; }
       const flag = p.status === "a" && (p.chance == null || p.chance >= 100) ? "" :
         `<span class="flag ${p.status === "i" || p.status === "s" || p.chance === 0 ? "out" : ""}" title="${esc(p.news)}">${p.chance == null ? "!" : p.chance + "%"}</span>`;
       const cap = p.name === rec.captain ? `<span class="badge" aria-label="Captain">C</span>` : p.name === rec.vice ? `<span class="badge" aria-label="Vice-captain">V</span>` : "";
-      return `<div class="pl ${newIds.has(p.id) ? "new" : ""}">${flag}${cap}<b>${esc(p.name)}</b><span class="meta">${esc(fx(p.fixtures[0]))}</span><span class="xp">${p.xp[0].toFixed(1)}</span></div>`;
+      const rot = p.risk && p.risk.length ? `<span class="rot" title="${esc(p.risk.join(". "))}">Rotation risk</span>` : "";
+      return `<div class="pl ${newIds.has(p.id) ? "new" : ""}">${flag}${cap}<b>${esc(p.name)}</b><span class="meta">${esc(fx(p.fixtures[0]))}</span><span class="xp">${p.xp[0].toFixed(1)}</span>${rot}</div>`;
     };
     const rows = ["GKP", "DEF", "MID", "FWD"].map(pos => `<div class="line">${rec.xi.filter(p => p.pos === pos).map(p => card(p)).join("")}</div>`).join("");
     const bench = `<div class="bench"><span class="label">Bench, in order</span><div class="line" style="margin-top:8px">${rec.bench.map(p => card(p, true)).join("")}</div></div>`;
     const flagged = [...rec.xi, ...rec.bench].filter(p => p.news);
-    const notes = flagged.length ? `<p class="small muted"><b>Team news:</b> ${flagged.map(p => `${esc(p.name)}: ${esc(p.news)}`).join(" · ")}</p>` : "";
+    const rotating = [...rec.xi, ...rec.bench].filter(p => p.risk && p.risk.length);
+    const notes = (flagged.length ? `<p class="small muted"><b>Team news:</b> ${flagged.map(p => `${esc(p.name)}: ${esc(p.news)}`).join(" · ")}</p>` : "") +
+      (rotating.length ? `<p class="small muted"><b>Rotation watch:</b> ${rotating.map(p => `${esc(p.name)}: ${esc(p.risk.join("; "))}`).join(" · ")}</p>` : "");
 
     // Captaincy
     const caps = [...rec.xi].sort((a, b) => b.xp[0] - a.xp[0]).slice(0, 3);
@@ -252,7 +256,7 @@ td.fx { padding: 0 2px; }
     const idea = i => {
       const later = i.best_gw && i.best_gw > d.next_gw;
       const weeks = i.weekly ? d.gws.map((g, k) => `GW${g} ${i.weekly[k] >= 0 ? "+" : ""}${i.weekly[k].toFixed(1)}`).join(", ") : "";
-      return `<div class="idea"><span><b class="out-name">${esc(i.out.name)}</b> → <b class="in-name">${esc(i.in.name)}</b> <span class="muted small">${esc(i.in.team)} · £${i.in.price.toFixed(1)}m</span></span><span><span class="when ${later ? "later" : ""}">${later ? `Gameweek ${i.best_gw}` : "Now"}</span> <span class="num small">+${i.gain.toFixed(1)} pts</span></span>${weeks ? `<span class="small muted" style="flex-basis:100%">${esc(weeks)}</span>` : ""}</div>`;
+      return `<div class="idea"><span><b class="out-name">${esc(i.out.name)}</b> → <b class="in-name">${esc(i.in.name)}</b> <span class="muted small">${esc(i.in.team)} · £${i.in.price.toFixed(1)}m</span></span><span><span class="when ${later ? "later" : ""}">${later ? `Gameweek ${i.best_gw}` : "Now"}</span> <span class="num small">+${i.gain.toFixed(1)} pts</span></span>${weeks ? `<span class="small muted" style="flex-basis:100%">${esc(weeks)}</span>` : ""}${i.in.risk && i.in.risk.length ? `<span class="small" style="flex-basis:100%;color:var(--warn)">Watch ${esc(i.in.name)}: ${esc(i.in.risk.join("; "))}</span>` : ""}</div>`;
     };
     const ideas = [...d.ideas].sort((a, b) => (a.best_gw || 0) - (b.best_gw || 0) || b.gain - a.gain).map(idea).join("");
 

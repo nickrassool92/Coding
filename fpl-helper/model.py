@@ -3,10 +3,14 @@
 Usage: python3 -I model.py <entry_id> <data_dir> <out.json>
 <data_dir> must hold bootstrap.json, fixtures.json, entry.json, history.json,
 transfers.json and picks.json (the latest gameweek's picks) from the public FPL API.
+fetch.py also adds summaries.json (recent matches) and fotmob.json (lineups and other
+fixtures); without them the model falls back to season-long start rates.
 """
 import json
 import math
+import os
 import sys
+import unicodedata
 from datetime import datetime, timezone
 
 HORIZON = 5
@@ -22,9 +26,21 @@ HIT = 4
 SAVED_FT = 1.0  # rough value, in points, of keeping a transfer in hand for another gameweek (counted for up to two)
 
 
-def load(d, name):
-    with open(f"{d}/{name}") as f:
+def load(d, name, default=None):
+    path = f"{d}/{name}"
+    if default is not None and not os.path.exists(path):
+        return default
+    with open(path) as f:
         return json.load(f)
+
+
+def norm(s):
+    s = unicodedata.normalize("NFKD", s.lower())
+    return "".join(c for c in s if not unicodedata.combining(c)).replace("-", " ").replace(".", " ")
+
+
+def utc(s):
+    return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
 def main(entry_id, d, out_path):
@@ -34,6 +50,10 @@ def main(entry_id, d, out_path):
     history = load(d, "history.json")
     transfers = load(d, "transfers.json")
     picks = load(d, "picks.json")
+    summaries = {int(k): v for k, v in load(d, "summaries.json", {}).items()}
+    fotmob = load(d, "fotmob.json", {"lineups": {}, "other_fixtures": {}})
+    lineups = {int(k): v for k, v in fotmob.get("lineups", {}).items()}
+    other_fx = {int(k): [(r["comp"], utc(r["utc"])) for r in v] for k, v in fotmob.get("other_fixtures", {}).items()}
 
     E = {p["id"]: p for p in b["elements"]}
     teams = {t["id"]: t for t in b["teams"]}
@@ -49,15 +69,73 @@ def main(entry_id, d, out_path):
     by_gw = {g: {t: [] for t in teams} for g in gws}
     for f in fixtures:
         if f["event"] in by_gw:
-            by_gw[f["event"]][f["team_h"]].append((f["team_a"], True, f["team_h_difficulty"]))
-            by_gw[f["event"]][f["team_a"]].append((f["team_h"], False, f["team_a_difficulty"]))
+            by_gw[f["event"]][f["team_h"]].append((f["team_a"], True, f["team_h_difficulty"], f["kickoff_time"]))
+            by_gw[f["event"]][f["team_a"]].append((f["team_h"], False, f["team_a_difficulty"], f["kickoff_time"]))
 
-    def availability(p, offset):
+    def recent(p):
+        """Weighted share of the last four matches started, and average minutes when starting."""
+        cutoff = datetime.now(timezone.utc).timestamp() - 3 * 3600  # ignore games not yet played
+        rows = [r for r in summaries.get(p["id"], []) if r["kickoff"] and utc(r["kickoff"]).timestamp() < cutoff][-4:][::-1]
+        if not rows:
+            return None, None
+        w = [0.4, 0.3, 0.2, 0.1][:len(rows)]
+        share = sum(wi * (1 if r["starts"] else 0) for wi, r in zip(w, rows)) / sum(w)
+        mins = [r["minutes"] for r in rows if r["starts"]]
+        return share, (sum(mins) / len(mins) if mins else None)
+
+    def in_lineup(p):
+        """True, False, or None when there is no lineup yet; plus whether it is confirmed."""
+        lu = lineups.get(p["team"])
+        if not lu:
+            return None, False
+        full = norm(p["first_name"] + " " + p["second_name"]).split()
+        web = norm(p["web_name"]).strip()
+
+        def match(name):
+            toks = norm(name).split()
+            return bool(toks) and (norm(name).strip() == web or (toks[-1] in full and (len(toks) == 1 or toks[0] in full)))
+        confirmed = lu.get("type", "").lower() not in ("predicted", "")
+        if any(match(n) for n in lu.get("unavailable", [])):
+            return False, True
+        return any(match(n) for n in lu["starters"]), confirmed
+
+    def europe(team, kickoff):
+        """A European match within three and a half days either side of a league game. Domestic cup
+        games are left out: managers rotate in the cup game itself, not the league game around it."""
+        if not kickoff:
+            return None
+        k = utc(kickoff)
+        near = [(c, t) for c, t in other_fx.get(team, [])
+                if any(x in c for x in ("Champions League", "Europa League", "Conference League"))
+                and abs((t - k).total_seconds()) <= 3.5 * 86400]
+        return min(near, key=lambda x: abs((x[1] - k).total_seconds())) if near else None
+
+    rotation = {}  # player id -> reasons, for the app
+
+    def availability(p, offset, kickoff=None):
         if p["status"] == "u":
             return 0.0
-        start_rate = min(1.0, p["starts"] / played[p["team"]]) if played[p["team"]] else 0.5
+        season = min(1.0, p["starts"] / played[p["team"]]) if played[p["team"]] else 0.5
+        share, _ = recent(p)
+        start_rate = season if share is None else 0.5 * season + 0.5 * share
         if p["minutes"] < 90:
             start_rate = min(start_rate, 0.35)
+        reasons = rotation.setdefault(p["id"], [])
+        if offset == 0:
+            if share is not None and season >= 0.6 and share <= 0.4:
+                reasons.append("Dropped recently: started few of the last four games")
+            listed, confirmed = in_lineup(p)
+            if listed is True:
+                start_rate = 1.0 if confirmed else max(start_rate, 0.9)
+            elif listed is False:
+                start_rate = min(start_rate, 0.15 if confirmed else 0.3)
+                reasons.append("Not in the confirmed lineup" if confirmed else "Not in FotMob's predicted lineup")
+        if p["element_type"] != 1:
+            eu = europe(p["team"], kickoff)
+            if eu:
+                start_rate *= 0.95 if season >= 0.9 else 0.88
+                if offset <= 1 and season < 0.9:
+                    reasons.append(f"{eu[0]} on {eu[1].strftime('%a %d %b')}, so rotation is more likely")
         chance = p["chance_of_playing_next_round"]
         if p["status"] in ("i", "s", "n"):
             chance = 0 if chance is None else chance
@@ -98,14 +176,19 @@ def main(entry_id, d, out_path):
         for i, g in enumerate(gws):
             pts = 0.0
             fx = []
-            for opp, home, diff in by_gw[g][p["team"]]:
+            # Season figures already reflect a player's usual minutes, so only adjust when recent
+            # starts have been shorter than normal (for example, being eased back from injury).
+            _, mins = recent(p)
+            usual = p["minutes"] / p["starts"] if p["starts"] else None
+            minutes_factor = min(1.0, max(0.65, mins / usual)) if mins and usual else 1.0
+            for opp, home, diff, kickoff in by_gw[g][p["team"]]:
                 h = 1.05 if home else 0.97
-                pts += availability(p, i) * (att * FDR_ATT[diff] + dfn * FDR_DEF[diff]) * h
+                pts += availability(p, i, kickoff) * minutes_factor * (att * FDR_ATT[diff] + dfn * FDR_DEF[diff]) * h
                 fx.append({"opp": teams[opp]["short_name"], "home": home, "fdr": diff})
             row.append({"gw": g, "xp": round(pts, 2), "fixtures": fx})
         if row and p["ep_next"] not in (None, "") and by_gw[gws[0]][p["team"]]:
             # FPL's own figure leans on form, so scale it by this week's fixture before blending.
-            diffs = [diff for _, _, diff in by_gw[gws[0]][p["team"]]]
+            diffs = [x[2] for x in by_gw[gws[0]][p["team"]]]
             fix = sum(0.5 * FDR_ATT[x] + 0.5 * FDR_DEF[x] for x in diffs)
             row[0]["xp"] = round(0.8 * row[0]["xp"] + 0.2 * float(p["ep_next"]) * fix, 2)
         proj[p["id"]] = row
@@ -221,7 +304,8 @@ def main(entry_id, d, out_path):
                 "price": p["now_cost"] / 10, "sell": sell_price(pid) / 10 if pid in squad_ids else None,
                 "status": p["status"], "news": p["news"], "chance": p["chance_of_playing_next_round"],
                 "form": float(p["form"] or 0), "total": p["total_points"], "ownership": float(p["selected_by_percent"] or 0),
-                "xp": [r["xp"] for r in proj[pid]], "xp5": round(horizon(pid), 1), "fixtures": [r["fixtures"] for r in proj[pid]]}
+                "xp": [r["xp"] for r in proj[pid]], "xp5": round(horizon(pid), 1), "fixtures": [r["fixtures"] for r in proj[pid]],
+                "risk": sorted(set(rotation.get(pid, [])))}
 
     # Plans for 0 to 3 transfers this gameweek, built greedily from the best remaining move
     # that pays its way this week. Moves that only pay later are listed as upcoming instead.
