@@ -163,6 +163,16 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
 .mus .b span.hi { background: var(--done); }
 .chart svg { width: 100%; height: auto; display: block; }
 .prgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tpl { display: flex; gap: 6px; }
+.quick .tpl .go { flex: 1; min-width: 0; }
+.quick .tpl .ed { flex: none; justify-content: center; padding: 0 14px; color: var(--muted); font-weight: 700; }
+.pill { display: inline-block; background: var(--accent); color: var(--accent-ink); font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 1px 7px; vertical-align: middle; }
+.tline { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.tline > div:first-child { min-width: 0; }
+.tline b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.serv { display: flex; align-items: center; gap: 6px; }
+.serv button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--hair); background: var(--chalk); font-weight: 700; }
+.serv .num { min-width: 4.2em; text-align: center; font-weight: 700; font-size: 0.85rem; }
 .empty { padding: 20px; border: 2px dashed var(--hair); border-radius: 12px; text-align: center; color: var(--muted); }
 .sync { font-size: 0.8rem; color: var(--muted); text-align: center; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; max-width: calc(100% - 32px); }
@@ -262,7 +272,13 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
 
   // ---------- state ----------
-  const state = { workouts: {}, active: null, settings: { custom: [], favs: [], rest: 90 }, tab: "workout", openHist: null, confirm: null, detail: null, pick: null };
+  const state = { workouts: {}, templates: {}, active: null, settings: { custom: [], favs: [], rest: 90 }, tab: "workout", openHist: null, confirm: null, detail: null, pick: null, editTpl: null };
+  const PRESETS = [
+    ["Chest & Triceps", [["barbell-bench-press", 4], ["incline-dumbbell-press", 3], ["cable-fly", 3], ["chest-dip", 3], ["rope-tricep-pushdown", 3], ["ez-bar-skull-crusher", 3], ["cable-overhead-tricep-extension", 3]]],
+    ["Back & Biceps", [["lat-pulldown", 4], ["barbell-row", 4], ["seated-cable-row", 3], ["straight-arm-pulldown", 3], ["face-pull", 3], ["ez-bar-curl", 3], ["incline-dumbbell-curl", 3], ["hammer-curl", 3]]],
+    ["Legs", [["back-squat", 4], ["romanian-deadlift", 3], ["leg-press", 3], ["lying-leg-curl", 3], ["leg-extension", 3], ["standing-calf-raise", 4]]],
+    ["Shoulders & Abs", [["overhead-press", 4], ["dumbbell-lateral-raise", 4], ["reverse-pec-deck", 3], ["dumbbell-shrug", 3], ["machine-crunch", 3], ["hanging-leg-raise", 3]]]
+  ];
   let base = null;
   const exInfo = id => LIB[id] || state.settings.custom.find(c => c.id === id) || { id, name: id, muscle: "Other", equip: "OT", kind: "wr" };
   const allEx = () => Object.values(LIB).concat(state.settings.custom || []);
@@ -270,8 +286,8 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
 
   // ---------- storage ----------
   const LS = "ironlog-v1";
-  function lsLoad() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); if (v) { state.workouts = v.workouts || {}; state.active = v.active || null; Object.assign(state.settings, v.settings || {}); } } catch {} }
-  function lsSave() { try { localStorage.setItem(LS, JSON.stringify({ workouts: state.workouts, active: state.active, settings: state.settings })); } catch {} }
+  function lsLoad() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); if (v) { state.workouts = v.workouts || {}; state.templates = v.templates || {}; state.active = v.active || null; Object.assign(state.settings, v.settings || {}); } } catch {} }
+  function lsSave() { try { localStorage.setItem(LS, JSON.stringify({ workouts: state.workouts, templates: state.templates, active: state.active, settings: state.settings })); } catch {} }
   const chains = {};
   function put(docId, body) {
     if (!base) { lsSave(); return; }
@@ -345,8 +361,35 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   for (const n of ["workout", "history", "progress"]) $("t-" + n).onclick = () => { if (n !== "progress") state.detail = null; showTab(n); };
 
   // ---------- render: workout ----------
+  function tplLastDone(id) { let t = 0; for (const w of Object.values(state.workouts)) if (w.tpl === id) t = Math.max(t, w.start); return t; }
+  function templatesCard() {
+    // least recently done first, so the session that's due comes up top
+    const tps = Object.values(state.templates).map(t => ({ t, last: tplLastDone(t.id) })).sort((a, b) => a.last - b.last || a.t.created - b.t.created);
+    if (!tps.length) return `<div class="card"><h2>Templates</h2><p class="small muted" style="margin:0">Save the sessions you repeat, like Chest &amp; Triceps, then start them in one tap with last time's weights filled in. Add a starter and edit it, or build your own.</p>
+      <div class="chips" style="flex-wrap:wrap">${PRESETS.map((p, i) => `<button class="chip" data-act="tpl-preset" data-i="${i}">+ ${esc(p[0])}</button>`).join("")}</div>
+      <button class="btn ghost" data-act="tpl-new">Build your own template</button></div>`;
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2>Templates</h2><button class="link" data-act="tpl-new">+ New template</button></div><div class="quick">${tps.map(({ t, last }, i) => {
+      const mus = [...new Set(t.ex.map(e => exInfo(e.id).muscle))].slice(0, 3).join(", ");
+      return `<div class="tpl"><button class="go" data-act="tpl-start" data-id="${t.id}"><span><b>${esc(t.name)}${i === 0 && tps.length > 1 ? ' <span class="pill">Next up</span>' : ""}</b><span class="small muted">${t.ex.length} exercise${t.ex.length > 1 ? "s" : ""} · ${esc(mus)} · ${last ? "last " + dateShort(last) : "not done yet"}</span></span><span class="link">Start</span></button><button class="ed" data-act="tpl-edit" data-id="${t.id}" aria-label="Edit ${esc(t.name)}">Edit</button></div>`;
+    }).join("")}</div></div>`;
+  }
+  function renderTplEditor(v) {
+    const t = state.editTpl, exists = !!state.templates[t.id];
+    v.innerHTML = `<button class="link" data-act="tpl-cancel" style="align-self:flex-start">‹ Back without saving</button>
+      <div class="card"><h2>${exists ? "Edit template" : "New template"}</h2>
+        <input id="tplName" class="search" style="border-width:1px" value="${esc(t.name)}" placeholder="Name, e.g. Chest & Triceps" aria-label="Template name">
+        ${t.ex.length ? `<div>${t.ex.map((e, i) => { const x = exInfo(e.id); return `<div class="tline"><div><b>${esc(x.name)}</b><span class="small muted">${esc(x.muscle)} · ${EQUIP[x.equip] || ""}</span></div>
+          <div class="serv"><button data-act="tpl-sets" data-i="${i}" data-d="-1" aria-label="Fewer sets">−</button><span class="num">${e.sets} set${e.sets > 1 ? "s" : ""}</span><button data-act="tpl-sets" data-i="${i}" data-d="1" aria-label="More sets">+</button></div>
+          <div class="ex-menu"><button data-act="tpl-up" data-i="${i}" ${i ? "" : "disabled"} aria-label="Move up">↑</button><button data-act="tpl-rm" data-i="${i}" aria-label="Remove">×</button></div></div>`; }).join("")}</div>`
+          : `<div class="empty">Add the exercises for this session, in the order you do them.</div>`}
+        <button class="btn ghost" data-act="tpl-pick">+ Add exercises</button></div>
+      ${state.confirm === "tpl" ? `<div class="confirm"><span>Delete the "${esc(t.name)}" template? Past workouts stay in your history.</span><button class="btn danger" data-act="tpl-del-yes">Delete</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
+      <div class="row"><button class="btn done" data-act="tpl-save" style="flex:2">Save template</button>${exists ? `<button class="btn ghost" data-act="tpl-del" style="flex:1">Delete</button>` : ""}</div>`;
+  }
+
   function renderWorkout() {
     const v = $("v-workout");
+    if (state.editTpl) return renderTplEditor(v);
     if (!state.active) {
       const ws = finished(), wk = weekStart(Date.now());
       const thisWeek = ws.filter(w => w.start >= wk);
@@ -357,8 +400,9 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
           <div class="stat"><span class="label">Volume</span><b>${fmtN(thisWeek.reduce((t, w) => t + volume(w), 0) / 1000, 1)}t</b><span class="small muted">this week</span></div>
           <div class="stat"><span class="label">All time</span><b>${ws.length}</b><span class="small muted">workouts</span></div>
         </div>
-        <button class="btn big" data-act="start">Start workout</button>
-        ${recent.length ? `<div class="card"><h2>Repeat a workout</h2><div class="quick">${recent.map(w => `
+        ${templatesCard()}
+        <button class="btn big${Object.keys(state.templates).length ? " ghost" : ""}" data-act="start">${Object.keys(state.templates).length ? "Start empty workout" : "Start workout"}</button>
+        ${recent.length ? `<div class="card"><h2>Recent workouts</h2><div class="quick">${recent.map(w => `
           <button data-act="repeat" data-id="${w.id}"><span><b>${esc(w.name)}</b><span class="small muted">${dateShort(w.start)} · ${w.ex.map(e => esc(exInfo(e.id).name)).slice(0, 3).join(", ")}${w.ex.length > 3 ? ` +${w.ex.length - 3}` : ""}</span></span><span class="link">Start</span></button>`).join("")}</div></div>`
           : `<div class="empty">Your workouts will show up here. Tap <b>Start workout</b>, add exercises from the library and log each set. Next time, the app shows what you lifted last session so you know what to beat.</div>`}`;
       return;
@@ -406,7 +450,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
       if (open) {
         html += `<div class="hbody">${w.ex.map(e => { const i = exInfo(e.id); const d = e.sets.filter(s => s.done); return d.length ? `<div class="hline"><b>${esc(i.name)}</b><span class="num">${d.map(s => esc(setText(i.kind, s)) + (s.pr ? " ★" : "")).join(", ")}</span></div>` : ""; }).join("")}
           ${state.confirm === "del" + w.id ? `<div class="confirm"><span>Delete this workout for good?</span><button class="btn danger" data-act="del-yes" data-id="${w.id}">Delete</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
-          <div class="row"><button class="btn" data-act="repeat" data-id="${w.id}">Repeat workout</button><button class="btn ghost" data-act="del" data-id="${w.id}">Delete</button></div></div>`;
+          <div class="row"><button class="btn" data-act="repeat" data-id="${w.id}">Repeat workout</button><button class="btn ghost" data-act="tpl-from" data-id="${w.id}">${w.tpl && state.templates[w.tpl] ? "Update template" : "Save as template"}</button><button class="btn ghost" data-act="del" data-id="${w.id}">Delete</button></div></div>`;
       }
       html += `</div>`;
     }
@@ -504,15 +548,21 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   }
 
   // ---------- workout actions ----------
-  function newWorkout(fromId) {
+  function buildSets(id, n, start) {
+    // carry last session's weights forward; reps start blank with last time as the placeholder
+    const p = prevSets(id, start);
+    return Array.from({ length: n }, (_, i) => ({ a: p[i]?.a ?? p[p.length - 1]?.a ?? "", b: "" }));
+  }
+  function newWorkout(fromId, tplId) {
     const now = Date.now();
-    const src = fromId && state.workouts[fromId];
+    const src = fromId && state.workouts[fromId], tpl = tplId && state.templates[tplId];
     state.active = {
-      id: "w-" + now, start: now, name: src ? src.name : dayName(now) + " workout",
-      ex: src ? src.ex.map(e => ({ id: e.id, sets: e.sets.filter(s => s.done).map(() => ({ a: "", b: "" })) })).filter(e => e.sets.length) : []
+      id: "w-" + now, start: now, name: tpl ? tpl.name : src ? src.name : dayName(now) + " workout", tpl: tpl ? tpl.id : src?.tpl || null,
+      ex: tpl ? tpl.ex.map(e => ({ id: e.id, sets: buildSets(e.id, e.sets, now) }))
+        : src ? src.ex.map(e => ({ id: e.id, sets: buildSets(e.id, e.sets.filter(s => s.done).length, now) })).filter(e => e.sets.length) : []
     };
-    state.confirm = null; saveActive(true); showTab("workout");
-    if (!src) openPicker();
+    state.editTpl = null; state.confirm = null; saveActive(true); showTab("workout");
+    if (!src && !tpl) openPicker();
   }
   function prefill(e, si) {
     // copy values from the previous set in this workout, else from last session's same set
@@ -536,6 +586,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   document.addEventListener("input", e => {
     const t = e.target;
     if (t.id === "wkName" && state.active) { state.active.name = t.value; saveActive(); return; }
+    if (t.id === "tplName" && state.editTpl) { state.editTpl.name = t.value; return; }
     if (t.dataset.f && state.active) {
       const s = state.active.ex[+t.dataset.ei]?.sets[+t.dataset.si]; if (!s) return;
       s[t.dataset.f] = t.value.replace(",", ".");
@@ -574,6 +625,28 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
       case "finish": finishWorkout(); break;
       case "discard": state.confirm = "discard"; renderWorkout(); break;
       case "discard-yes": state.active = null; state.confirm = null; saveActive(true); stopRest(); renderWorkout(); break;
+      case "tpl-start": newWorkout(null, b.dataset.id); break;
+      case "tpl-new": state.editTpl = { id: "t-" + Date.now(), name: "", ex: [], created: Date.now() }; state.confirm = null; showTab("workout"); break;
+      case "tpl-preset": { const [name, ex] = PRESETS[+b.dataset.i]; state.editTpl = { id: "t-" + Date.now(), name, ex: ex.filter(([id]) => LIB[id]).map(([id, sets]) => ({ id, sets })), created: Date.now() }; state.confirm = null; showTab("workout"); break; }
+      case "tpl-edit": state.editTpl = JSON.parse(JSON.stringify(state.templates[b.dataset.id])); state.confirm = null; showTab("workout"); break;
+      case "tpl-from": {
+        const src = state.workouts[b.dataset.id], cur = src.tpl && state.templates[src.tpl];
+        state.editTpl = { id: cur ? cur.id : "t-" + Date.now(), name: cur ? cur.name : src.name, ex: src.ex.map(e => ({ id: e.id, sets: Math.max(1, e.sets.filter(s => s.done).length) })), created: cur ? cur.created : Date.now() };
+        state.confirm = null; showTab("workout"); break;
+      }
+      case "tpl-sets": { const x = state.editTpl.ex[+b.dataset.i]; x.sets = Math.max(1, Math.min(10, x.sets + +b.dataset.d)); renderWorkout(); break; }
+      case "tpl-up": { const i = +b.dataset.i, x = state.editTpl.ex; if (i > 0) { [x[i - 1], x[i]] = [x[i], x[i - 1]]; renderWorkout(); } break; }
+      case "tpl-rm": state.editTpl.ex.splice(+b.dataset.i, 1); renderWorkout(); break;
+      case "tpl-pick": openPicker("tpl"); break;
+      case "tpl-cancel": state.editTpl = null; state.confirm = null; renderWorkout(); break;
+      case "tpl-save": {
+        const t = state.editTpl; t.name = t.name.trim();
+        if (!t.name) { toast("Give the template a name"); $("tplName")?.focus(); break; }
+        if (!t.ex.length) { toast("Add at least one exercise"); break; }
+        state.templates[t.id] = t; put(t.id, t); state.editTpl = null; state.confirm = null; renderWorkout(); toast(`Saved "${t.name}"`); break;
+      }
+      case "tpl-del": state.confirm = "tpl"; renderWorkout(); break;
+      case "tpl-del-yes": { const id = state.editTpl.id; delete state.templates[id]; put(id, null); state.editTpl = null; state.confirm = null; renderWorkout(); toast("Template deleted"); break; }
       case "hist": state.openHist = state.openHist === b.dataset.id ? null : b.dataset.id; state.confirm = null; renderHistory(); break;
       case "del": state.confirm = "del" + b.dataset.id; renderHistory(); break;
       case "del-yes": delete state.workouts[b.dataset.id]; put(b.dataset.id, null); state.confirm = null; renderHistory(); toast("Workout deleted"); break;
@@ -604,8 +677,9 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   $("restSkip").onclick = stopRest;
 
   // ---------- picker ----------
-  function openPicker() {
-    state.pick = { q: "", muscle: null, equip: null, sel: [], custom: false };
+  function openPicker(target) {
+    state.pick = { q: "", muscle: null, equip: null, sel: [], custom: false, target: target || "active" };
+    $("pickTitle").textContent = target === "tpl" ? "Add to template" : "Add exercises";
     $("picker").hidden = false; document.body.style.overflow = "hidden";
     $("pickSearch").value = ""; renderPicker();
     setTimeout(() => $("pickSearch").focus(), 50);
@@ -614,13 +688,14 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
   $("pickClose").onclick = closePicker;
   $("pickSearch").oninput = e => { state.pick.q = e.target.value; state.pick.custom = false; renderPickList(); };
   $("pickAdd").onclick = () => {
+    if (state.pick.target === "tpl") {
+      for (const id of state.pick.sel) state.editTpl?.ex.push({ id, sets: 3 });
+      closePicker(); renderWorkout(); return;
+    }
     const w = state.active; if (!w) return;
     for (const id of state.pick.sel) {
-      const ex = { id, sets: [] };
       const p = prevSets(id, w.start);
-      const n = Math.max(1, Math.min(p.length || 3, 8));
-      for (let i = 0; i < n; i++) ex.sets.push({ a: p[i]?.a ?? "", b: "" });
-      w.ex.push(ex);
+      w.ex.push({ id, sets: buildSets(id, Math.max(1, Math.min(p.length || 3, 8)), w.start) });
     }
     saveActive(); closePicker(); renderWorkout();
   };
@@ -701,19 +776,20 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
       setSync("Saved to your Claude account. Private to you.");
       let first = true;
       base.onSnapshot(snap => {
-        const ws = {};
+        const ws = {}, tps = {};
         let active = null;
         for (const d of snap.docs) {
           const body = d.data();
           if (d.id === "settings") { if (!d.metadata.hasPendingWrites) Object.assign(state.settings, body); }
           else if (d.id === "active") active = body.w || null;
           else if (d.id.startsWith("w-")) ws[d.id] = body;
+          else if (d.id.startsWith("t-")) tps[d.id] = body;
         }
-        state.workouts = ws;
+        state.workouts = ws; state.templates = tps;
         // Take the in-progress workout from the store on first load, or when this device isn't mid-edit.
         if (first || (!state.active && active) || (Date.now() - activeTouched > 5000 && !snap.metadata.hasPendingWrites)) state.active = active;
         first = false;
-        if (!state.pick && !document.activeElement?.dataset?.f && document.activeElement?.id !== "wkName") render();
+        if (!state.pick && !document.activeElement?.dataset?.f && !["wkName", "tplName"].includes(document.activeElement?.id)) render();
       }, () => setSync("Lost connection to your saved data. Reload to reconnect."));
     } else {
       lsLoad(); render();
