@@ -1,0 +1,203 @@
+<title>Full Time</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a stadium scoreboard in one column. Track record first, then each fixture as a scoreline card with the odds underneath. */
+:root {
+  --bg: #ECEEF1;
+  --surface: #FFFFFF;
+  --ink: #161B22;
+  --muted: #5B6573;
+  --hair: #D4D9E0;
+  --board: #1B222C;
+  --board-ink: #F4F1EA;
+  --lamp: #F5B841;
+  --home: #2F6FDB;
+  --draw: #9AA3AF;
+  --away: #D2543A;
+  --good: #1E8A4C;
+  --good-soft: #DDF1E4;
+  --bad: #C2362C;
+  --bad-soft: #F8E1DE;
+  --focus: #2563EB;
+  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1217; --surface: #171D25; --ink: #E7EAEE; --muted: #9AA4B1; --hair: #2A323D;
+    --board: #0A0E13; --board-ink: #F4F1EA; --lamp: #F5B841;
+    --home: #6A9BF0; --draw: #7B8492; --away: #EB7A61; --good: #4CC27F; --good-soft: #15301F; --bad: #F06A5F; --bad-soft: #3B1F1C; --focus: #7AA7FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1217; --surface: #171D25; --ink: #E7EAEE; --muted: #9AA4B1; --hair: #2A323D;
+  --board: #0A0E13; --board-ink: #F4F1EA; --lamp: #F5B841;
+  --home: #6A9BF0; --draw: #7B8492; --away: #EB7A61; --good: #4CC27F; --good-soft: #15301F; --bad: #F06A5F; --bad-soft: #3B1F1C; --focus: #7AA7FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 48px;
+}
+.app { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2 { font-family: var(--display); margin: 0; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; text-wrap: balance; }
+h1 { font-size: 2.6rem; line-height: 0.95; }
+h2 { font-size: 1.5rem; line-height: 1; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.top .sub { color: var(--muted); font-size: 0.9rem; }
+
+.record { background: var(--board); color: var(--board-ink); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.record .label { color: color-mix(in srgb, var(--board-ink) 65%, transparent); }
+.record b { font-family: var(--mono); font-size: 1.5rem; color: var(--lamp); display: block; }
+.record .note { grid-column: 1 / -1; font-size: 0.8rem; color: color-mix(in srgb, var(--board-ink) 70%, transparent); }
+
+.dayhead { font-family: var(--display); font-weight: 900; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+.games { display: flex; flex-direction: column; gap: 12px; }
+.game { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.team { font-weight: 700; font-size: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.team.away { text-align: right; }
+.board { display: flex; gap: 4px; align-items: center; background: var(--board); border-radius: 8px; padding: 6px 8px; }
+.board span { font-family: var(--mono); font-weight: 700; font-size: 1.7rem; color: var(--lamp); min-width: 1.1ch; text-align: center; line-height: 1; }
+.board i { color: color-mix(in srgb, var(--board-ink) 55%, transparent); font-style: normal; font-family: var(--mono); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.82rem; color: var(--muted); justify-content: space-between; }
+.bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--hair); }
+.bar span { display: block; height: 100%; }
+.bar .h { background: var(--home); } .bar .d { background: var(--draw); } .bar .a { background: var(--away); }
+.pct { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 0.82rem; }
+.pct span:nth-child(2) { text-align: center; } .pct span:nth-child(3) { text-align: right; }
+.pct b { font-family: var(--mono); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 0.78rem; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--hair); background: var(--bg); }
+.chip.close { border-color: var(--lamp); background: color-mix(in srgb, var(--lamp) 18%, var(--surface)); font-weight: 700; }
+.ft { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.9rem; }
+.ft.hit { background: var(--good-soft); color: var(--good); }
+.ft.miss { background: var(--bad-soft); color: var(--bad); }
+.ft.live { background: var(--bg); color: var(--muted); }
+.absent { font-size: 0.8rem; color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+td.n, th.n { text-align: right; font-family: var(--mono); }
+.empty { border: 1px dashed var(--hair); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
+.foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div><h1>Full Time</h1><p class="sub" id="sub">Premier League score predictions</p></div>
+    <span class="small muted" id="updated"></span>
+  </header>
+  <section class="record" id="record" hidden>
+    <div><span class="label">Results right</span><b id="rRight">–</b></div>
+    <div><span class="label">Exact scores</span><b id="rExact">–</b></div>
+    <div><span class="label">Strike rate</span><b id="rGames">–</b></div>
+    <p class="note">Every prediction is locked at kick-off and checked against the final score.</p>
+  </section>
+  <div id="games" class="games"><div class="empty">Loading this gameweek's predictions…</div></div>
+  <section class="panel" id="ratingsPanel" hidden>
+    <h2>Team ratings</h2>
+    <p class="small muted">1.00 is league average. Attack above 1 scores more than average; defence below 1 concedes less. Built from expected goals this season, blended with last season while the sample is small.</p>
+    <div class="tablewrap"><table id="ratings"></table></div>
+  </section>
+  <p class="foot">Predictions are estimates from expected goals and team news, not certainties.</p>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pct = x => Math.round(x * 100) + "%";
+
+  function render(d) {
+    $("updated").textContent = "Updated " + new Date(d.updatedAt).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit" });
+    // Show one gameweek at a time: the earliest with a game still to finish.
+    const open = d.games.filter(g => !g.finished);
+    const gw = open.length ? Math.min(...open.map(g => g.gw)) : Math.max(...d.games.map(g => g.gw));
+    $("sub").textContent = `Gameweek ${gw} predictions`;
+    const list = d.games.filter(g => g.gw === gw);
+
+    const hist = Object.values(d.history || {});
+    if (hist.length) {
+      $("record").hidden = false;
+      const right = hist.filter(h => h.right_result).length, exact = hist.filter(h => h.exact).length;
+      $("rRight").textContent = `${right}/${hist.length}`;
+      $("rExact").textContent = String(exact);
+      $("rGames").textContent = `${Math.round(right / hist.length * 100)}%`;
+    }
+
+    let html = "", lastDay = "";
+    for (const g of list) {
+      const day = g.kickoff ? new Date(g.kickoff).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" }) : "Date to be confirmed";
+      if (day !== lastDay) { html += `<div class="dayhead">${esc(day)}</div>`; lastDay = day; }
+      const time = g.kickoff ? new Date(g.kickoff).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" }) : "";
+      const p = g.pred;
+      if (!p) {
+        html += `<article class="game"><div class="line"><span class="team">${esc(g.home)}</span><div class="board"><span>–</span><i>:</i><span>–</span></div><span class="team away">${esc(g.away)}</span></div>
+          <p class="small muted">${g.result ? `Full time ${g.result[0]}-${g.result[1]}. ` : ""}No prediction was made before kick-off.</p></article>`;
+        continue;
+      }
+      const pr = p.probs, close = Math.abs(pr.home - pr.away) < 0.05;
+      let status = "";
+      if (g.finished && g.result) {
+        const [hs, as] = g.result, [ph, pa] = p.score;
+        const res = Math.sign(hs - as), pres = Math.sign(ph - pa);
+        const exact = hs === ph && as === pa;
+        status = `<div class="ft ${res === pres ? "hit" : "miss"}"><span>Full time: ${esc(g.home_short)} ${hs}-${as} ${esc(g.away_short)}</span><span>${exact ? "Exact score" : res === pres ? "Right result" : "Wrong result"}</span></div>`;
+      } else if (g.kickoff && new Date(g.kickoff) <= new Date()) {
+        status = `<div class="ft live"><span>Kicked off. The result appears after the next update.</span></div>`;
+      }
+      const others = p.top_scores.filter(s => !(s.score[0] === p.score[0] && s.score[1] === p.score[1])).slice(0, 3)
+        .map(s => `${s.score[0]}-${s.score[1]} ${pct(s.p)}`).join(", ");
+      const abs = [...p.absences.home.map(a => `${esc(a.name)} (${esc(g.home_short)})`), ...p.absences.away.map(a => `${esc(a.name)} (${esc(g.away_short)})`)];
+      html += `<article class="game">
+        <div class="meta"><span>${esc(time)}</span><span>Expected goals ${p.xg[0].toFixed(1)} – ${p.xg[1].toFixed(1)}</span></div>
+        <div class="line"><span class="team">${esc(g.home)}</span><div class="board" aria-label="Predicted score ${p.score[0]} ${p.score[1]}"><span>${p.score[0]}</span><i>:</i><span>${p.score[1]}</span></div><span class="team away">${esc(g.away)}</span></div>
+        <div class="bar" aria-hidden="true"><span class="h" style="width:${pr.home * 100}%"></span><span class="d" style="width:${pr.draw * 100}%"></span><span class="a" style="width:${pr.away * 100}%"></span></div>
+        <div class="pct"><span>${esc(g.home_short)} win <b>${pct(pr.home)}</b></span><span>Draw <b>${pct(pr.draw)}</b></span><span>${esc(g.away_short)} win <b>${pct(pr.away)}</b></span></div>
+        <div class="chips">
+          ${close ? `<span class="chip close">Too close to call</span>` : ""}
+          <span class="chip">Both score ${pct(p.btts)}</span>
+          <span class="chip">Over 2.5 goals ${pct(p.over25)}</span>
+          <span class="chip">Clean sheet ${esc(g.home_short)} ${pct(p.clean_sheet[0])} · ${esc(g.away_short)} ${pct(p.clean_sheet[1])}</span>
+        </div>
+        <p class="small muted">Other likely scores: ${esc(others)}</p>
+        ${abs.length ? `<p class="absent">Missing: ${abs.join(", ")}</p>` : ""}
+        ${status}
+      </article>`;
+    }
+    $("games").innerHTML = html || `<div class="empty">No games found for this gameweek.</div>`;
+
+    const r = Object.entries(d.ratings || {}).sort((a, b) => (b[1].attack - b[1].defence) - (a[1].attack - a[1].defence));
+    if (r.length) {
+      $("ratingsPanel").hidden = false;
+      $("ratings").innerHTML = `<thead><tr><th>Club</th><th class="n">Attack</th><th class="n">Defence</th></tr></thead><tbody>${r.map(([t, v]) => `<tr><td><b>${esc(t)}</b></td><td class="n">${v.attack.toFixed(2)}</td><td class="n">${v.defence.toFixed(2)}</td></tr>`).join("")}</tbody>`;
+    }
+  }
+
+  (async () => {
+    const db = await Promise.resolve(window.claude?.use("db")).catch(() => null);
+    if (!db) { $("games").innerHTML = `<div class="empty">Sign in to Claude to see the predictions.</div>`; return; }
+    db.doc("predictions/current").onSnapshot(snap => {
+      if (!snap.exists) { $("games").innerHTML = `<div class="empty">Predictions haven't been made yet. They update every day.</div>`; return; }
+      render(snap.data());
+    }, () => { $("games").innerHTML = `<div class="empty">Couldn't load the predictions. Reload to try again.</div>`; });
+  })();
+})();
+</script>
