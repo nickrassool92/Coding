@@ -1,0 +1,588 @@
+<title>Card Sharp</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one phone-width column like a referee's notebook. Fixture picker, match sheet, then bets as yellow-card slips. */
+:root {
+  --bg: #EDF1EC;
+  --surface: #FFFFFF;
+  --ink: #15201A;
+  --muted: #5A665E;
+  --hair: #D2D9D2;
+  --yellow: #F2C230;
+  --yellow-ink: #3A2C00;
+  --yellow-soft: #FBF0C8;
+  --red: #C2362C;
+  --red-soft: #F8E1DE;
+  --win: #22744A;
+  --win-soft: #DDEFE4;
+  --focus: #2563EB;
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1512; --surface: #18201B; --ink: #E6ECE7; --muted: #97A49B; --hair: #2C3630;
+    --yellow: #F2C230; --yellow-ink: #2A2000; --yellow-soft: #3A3215; --red: #F06A5F; --red-soft: #3B1F1C;
+    --win: #5CC48A; --win-soft: #18301F; --focus: #7AA7FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1512; --surface: #18201B; --ink: #E6ECE7; --muted: #97A49B; --hair: #2C3630;
+  --yellow: #F2C230; --yellow-ink: #2A2000; --yellow-soft: #3A3215; --red: #F06A5F; --red-soft: #3B1F1C;
+  --win: #5CC48A; --win-soft: #18301F; --focus: #7AA7FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 48px;
+}
+.app { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; font-weight: 800; letter-spacing: 0.01em; }
+h1 { font-size: 2.1rem; line-height: 1; text-transform: uppercase; }
+h2 { font-size: 1.5rem; line-height: 1.1; }
+h3 { font-size: 1.3rem; line-height: 1.1; }
+p { margin: 0; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .yc { width: 26px; height: 36px; background: var(--yellow); border-radius: 3px; transform: rotate(-8deg); box-shadow: 2px 2px 0 var(--ink); }
+.brand p { font-size: 0.85rem; color: var(--muted); }
+.tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--hair); border-radius: 999px; padding: 3px; }
+.tabs button { border: 0; background: transparent; padding: 6px 14px; border-radius: 999px; font-weight: 700; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.mwline { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+
+.days { display: flex; flex-direction: column; gap: 12px; }
+.day { display: flex; flex-direction: column; gap: 6px; }
+.fx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+.fx { text-align: left; background: var(--surface); border: 1px solid var(--hair); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fx b { font-weight: 700; }
+.fx span { font-size: 0.8rem; color: var(--muted); }
+.fx[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.fx.other { border-style: dashed; justify-content: center; }
+
+.meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 0.9rem; }
+.meta select { padding: 4px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--surface); max-width: 100%; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fact { border: 1px solid var(--hair); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fact b { font-family: var(--mono); font-size: 1.25rem; }
+.fact span:last-child { font-size: 0.75rem; color: var(--muted); }
+@media (max-width: 460px) { .facts { grid-template-columns: 1fr 1fr; } .fact:first-child { grid-column: 1 / -1; } }
+.booked { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; background: var(--yellow-soft); font-size: 0.82rem; }
+.chip i { width: 8px; height: 11px; background: var(--yellow); border-radius: 1px; display: inline-block; }
+
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field input, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--hair); border-radius: 8px; background: var(--bg); }
+.field textarea { min-height: 84px; resize: vertical; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 700; background: var(--ink); color: var(--bg); }
+.btn.yellow { background: var(--yellow); color: var(--yellow-ink); box-shadow: 2px 2px 0 var(--ink); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--hair); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.status { font-size: 0.9rem; color: var(--muted); }
+.status.err { color: var(--red); }
+
+.results { display: flex; flex-direction: column; gap: 12px; }
+.summary { font-size: 0.95rem; }
+.bet { background: var(--surface); border: 1px solid var(--hair); border-left: 10px solid var(--yellow); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.bet-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.conf { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+.cards { display: flex; gap: 3px; }
+.cards i { width: 11px; height: 15px; border-radius: 2px; background: var(--hair); display: block; }
+.cards i.on { background: var(--yellow); }
+.prices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.price { display: flex; flex-direction: column; gap: 1px; }
+.price b { font-family: var(--mono); font-size: 1rem; }
+.price b.pos { color: var(--win); }
+.price b.neg { color: var(--red); }
+@media (max-width: 460px) { .prices { grid-template-columns: 1fr 1fr; } }
+.add { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; border-top: 1px solid var(--hair); padding-top: 10px; }
+.add .field { width: 96px; }
+.add .field input { background: var(--bg); }
+
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tile { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tile b { font-family: var(--mono); font-size: 1.35rem; }
+.tile b.pos { color: var(--win); }
+.tile b.neg { color: var(--red); }
+@media (max-width: 460px) { .tiles { grid-template-columns: 1fr 1fr; } }
+.unitrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.9rem; }
+.unitrow input { width: 80px; padding: 4px 8px; border: 1px solid var(--hair); border-radius: 6px; background: var(--surface); }
+.ledger { display: flex; flex-direction: column; gap: 8px; }
+.slip { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.slip-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.slip-top b { font-weight: 700; }
+.seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.seg button { border: 1px solid var(--hair); background: transparent; border-radius: 6px; padding: 4px 10px; font-size: 0.85rem; font-weight: 600; }
+.seg button[aria-pressed="true"][data-s="won"] { background: var(--win-soft); border-color: var(--win); color: var(--win); }
+.seg button[aria-pressed="true"][data-s="lost"] { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+.seg button[aria-pressed="true"][data-s="void"], .seg button[aria-pressed="true"][data-s="pending"] { background: var(--bg); border-color: var(--ink); }
+.slip-bot { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.linkish { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; font-size: 0.85rem; }
+.linkish.danger { color: var(--red); }
+.empty { border: 1px dashed var(--hair); border-radius: 10px; padding: 18px; text-align: center; color: var(--muted); }
+
+.prose { display: flex; flex-direction: column; gap: 10px; max-width: 65ch; }
+.prose ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+td.num, th.num { text-align: right; }
+.foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="yc" aria-hidden="true"></div>
+      <div>
+        <h1>Card Sharp</h1>
+        <p>Premier League · Player to be carded · Sportsbet</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button id="tabBets" role="tab" aria-selected="true" data-tab="bets">Bets</button>
+      <button id="tabTrack" role="tab" aria-selected="false" data-tab="track">Tracker</button>
+      <button id="tabData" role="tab" aria-selected="false" data-tab="data">Data</button>
+    </nav>
+  </header>
+
+  <!-- BETS -->
+  <section id="view-bets" class="app" style="gap:18px">
+    <div class="mwline">
+      <h2 id="mwTitle">This week's fixtures</h2>
+      <span id="asOf" class="small muted"></span>
+    </div>
+    <div id="days" class="days"><div class="empty">Loading this week's fixtures…</div></div>
+
+    <div id="match" class="panel" hidden>
+      <div>
+        <h2 id="mName"></h2>
+        <div class="meta" style="margin-top:6px">
+          <span id="mKick" class="muted"></span>
+          <label class="muted" for="refSel">Referee</label>
+          <select id="refSel"></select>
+        </div>
+      </div>
+      <div id="otherFields" class="row2" hidden>
+        <div class="field"><label class="label" for="oHome">Home team</label><input id="oHome" placeholder="e.g. Everton"></div>
+        <div class="field"><label class="label" for="oAway">Away team</label><input id="oAway" placeholder="e.g. Liverpool"></div>
+      </div>
+      <div class="facts">
+        <div class="fact"><span class="label">Referee</span><b id="fRef">–</b><span id="fRefN">yellows per game</span></div>
+        <div class="fact"><span class="label" id="fHomeL">Home</span><b id="fHome">–</b><span>team yellows per game</span></div>
+        <div class="fact"><span class="label" id="fAwayL">Away</span><b id="fAway">–</b><span>team yellows per game</span></div>
+      </div>
+      <div id="bookedWrap" class="field">
+        <span class="label">Booked this season</span>
+        <div id="booked" class="booked"></div>
+      </div>
+      <div class="field">
+        <label class="label" for="oddsIn">Sportsbet odds (paste from the Player to be carded market)</label>
+        <textarea id="oddsIn" placeholder="Caicedo 2.60&#10;Romero 2.75&#10;Bentancur 3.25"></textarea>
+      </div>
+      <div class="field">
+        <label class="label" for="newsIn">Team news or confirmed lineups (optional)</label>
+        <textarea id="newsIn" placeholder="Paste lineups once they drop, about an hour before kick-off. Injuries and suspensions help too."></textarea>
+      </div>
+      <div class="actions">
+        <button id="goBtn" class="btn yellow">Find bets</button>
+        <button id="stopBtn" class="btn ghost" hidden>Stop</button>
+        <span id="status" class="status"></span>
+      </div>
+    </div>
+
+    <div id="results" class="results"></div>
+  </section>
+
+  <!-- TRACKER -->
+  <section id="view-track" class="app" style="gap:14px" hidden>
+    <div class="tiles">
+      <div class="tile"><span class="label">Settled</span><b id="tCount" class="num">0</b><span id="tPend" class="small muted">0 pending</span></div>
+      <div class="tile"><span class="label">Strike rate</span><b id="tStrike" class="num">–</b><span id="tWL" class="small muted">0 won · 0 lost</span></div>
+      <div class="tile"><span class="label">Profit</span><b id="tProfit" class="num">0.00u</b><span id="tProfitD" class="small muted">$0</span></div>
+      <div class="tile"><span class="label">ROI</span><b id="tRoi" class="num">–</b><span id="tStaked" class="small muted">0u staked</span></div>
+    </div>
+    <div class="unitrow">
+      <label for="unitIn">1 unit =</label>
+      <span>$</span><input id="unitIn" type="number" min="1" step="1" inputmode="decimal" value="10">
+      <span id="sync" class="small muted"></span>
+    </div>
+    <div id="ledger" class="ledger"></div>
+  </section>
+
+  <!-- DATA -->
+  <section id="view-data" class="app" style="gap:14px" hidden>
+    <div class="panel prose">
+      <h2>How the analyst works</h2>
+      <p>Each pick weighs the player's booking rate, expected minutes, the opponent they'll be up against, the referee, and how the match is likely to play out. Teams without the ball foul more, and derbies and relegation fights run hot.</p>
+      <p>The chance it gives is turned into a fair price. A bet is only worth it when Sportsbet pays more than that. Stakes are quarter Kelly on a 100-unit bank, capped at 3 units.</p>
+      <ul>
+        <li><b>Paste the Sportsbet odds</b> so it can find real value. Without them you get a minimum price to take.</li>
+        <li><b>Paste the lineups</b> when they drop. A bench player is the biggest risk in this market.</li>
+      </ul>
+    </div>
+    <div class="panel prose">
+      <h2>Sportsbet settlement</h2>
+      <ul>
+        <li>A yellow or red card shown to the player counts.</li>
+        <li>If the player takes no part in the match, the bet is void and your stake comes back. A player who comes off the bench counts as playing.</li>
+        <li>Cards shown to players who aren't on the pitch, and cards after the full-time whistle, normally don't count. Check the market terms on Sportsbet before betting.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <div class="mwline"><h2>Referees this season</h2><span id="dAsOf" class="small muted"></span></div>
+      <div class="tablewrap"><table id="refTable"></table></div>
+    </div>
+    <div class="panel">
+      <h2>Team yellows per game</h2>
+      <div class="tablewrap"><table id="teamTable"></table></div>
+    </div>
+    <div class="panel prose">
+      <h2>Sources</h2>
+      <p id="dNotes" class="small muted"></p>
+      <ul id="dSources" class="small"></ul>
+    </div>
+  </section>
+
+  <p class="foot">Gamble responsibly. Set a limit and stick to it. Gambling Help Online: 1800 858 858.</p>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const uid = () => Math.random().toString(36).slice(2, 10);
+  const money = n => (n < 0 ? "-$" : "$") + Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const units = n => (n > 0 ? "+" : "") + n.toFixed(2) + "u";
+  const price = n => "$" + n.toFixed(2);
+  const BANK = 100, KELLY = 0.25, MAX_STAKE = 3, MIN_EDGE = 0.05;
+
+  const state = { pack: null, sel: null, refOverride: {}, bets: {}, unit: 10, last: null };
+  let db = null, base = null, sample = null, ctl = null;
+
+  // ---------- storage: private bets in db, localStorage fallback ----------
+  const LS = "cardsharp-v1";
+  function lsLoad() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); if (v) { state.bets = v.bets || {}; state.unit = v.unit || 10; } } catch {} }
+  function lsSave() { try { localStorage.setItem(LS, JSON.stringify({ bets: state.bets, unit: state.unit })); } catch {} }
+  const chains = {};
+  function write(docId, body) {
+    if (!base) { lsSave(); return; }
+    const ref = base.doc(docId);
+    const run = () => (body ? ref.set(body) : ref.delete()).catch(e => setSync(e.code === "quota_exceeded" ? "Storage is full." : "Couldn't save. Check your connection."));
+    chains[docId] = (chains[docId] || Promise.resolve()).then(run);
+  }
+  const saveBet = id => write("bet-" + id, state.bets[id] || null);
+  const saveSettings = () => write("settings", { unit: state.unit });
+  const setSync = t => { $("sync").textContent = t; };
+  try { const v = JSON.parse(localStorage.getItem("cardsharp-refs") || "{}"); state.refOverride = v || {}; } catch {}
+  const saveRefs = () => { try { localStorage.setItem("cardsharp-refs", JSON.stringify(state.refOverride)); } catch {} };
+
+  // ---------- tabs ----------
+  function showTab(name) {
+    for (const b of document.querySelectorAll(".tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
+    $("view-bets").hidden = name !== "bets"; $("view-track").hidden = name !== "track"; $("view-data").hidden = name !== "data";
+    try { localStorage.setItem("cardsharp-tab", name); } catch {}
+  }
+  for (const b of document.querySelectorAll(".tabs button")) b.onclick = () => showTab(b.dataset.tab);
+
+  // ---------- pack helpers ----------
+  const P = () => state.pack || { fixtures: [], referees: {}, teams: {}, players: [] };
+  const fixtureById = id => P().fixtures.find(f => f.id === id);
+  function refFor(f) { return f ? (state.refOverride[f.id] ?? f.referee ?? "") : (state.refOverride.other ?? ""); }
+  function refRate(name) { const r = P().referees[name]; return r && r.games ? (r.yellows / r.games) : null; }
+  function teamRate(name) { const t = P().teams[name]; return t && t.ypg != null ? t.ypg : null; }
+  function kickText(f) {
+    const d = new Date(f.kickoffUtc);
+    const day = d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
+    const time = d.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+    return f.kickoffTbc ? `${day} · time TBC` : `${day} · ${time}`;
+  }
+  function currentMatch() {
+    if (state.sel === "other") return { id: "other", home: $("oHome").value.trim(), away: $("oAway").value.trim(), kickoffUtc: null, other: true };
+    return fixtureById(state.sel);
+  }
+
+  // ---------- render: fixtures ----------
+  function renderFixtures() {
+    const p = state.pack;
+    if (!p) return;
+    $("mwTitle").textContent = `Matchweek ${p.matchweek}`;
+    $("asOf").textContent = `Data as of ${new Date(p.asOf + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long" })}`;
+    const groups = {};
+    for (const f of [...p.fixtures].sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1)) {
+      const key = new Date(f.kickoffUtc).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
+      (groups[key] = groups[key] || []).push(f);
+    }
+    let html = "";
+    for (const [day, list] of Object.entries(groups)) {
+      html += `<div class="day"><span class="label">${esc(day)}</span><div class="fx-grid">`;
+      for (const f of list) {
+        const ref = refFor(f);
+        const t = new Date(f.kickoffUtc).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+        html += `<button class="fx" data-fx="${esc(f.id)}" aria-pressed="${state.sel === f.id}"><b>${esc(f.home)} v ${esc(f.away)}</b><span>${f.kickoffTbc ? "Time TBC" : esc(t)} · ${ref ? esc(ref) : "Ref TBC"}</span></button>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `<div class="fx-grid"><button class="fx other" data-fx="other" aria-pressed="${state.sel === "other"}"><b>Another match</b><span>Type in any Premier League fixture</span></button></div>`;
+    $("days").innerHTML = html;
+    for (const b of $("days").querySelectorAll("[data-fx]")) b.onclick = () => selectFixture(b.dataset.fx);
+  }
+
+  function selectFixture(id) {
+    if (state.sel !== id) { $("oddsIn").value = ""; $("newsIn").value = ""; $("results").innerHTML = ""; state.last = null; }
+    state.sel = id;
+    renderFixtures(); renderMatch();
+    $("match").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  }
+
+  // ---------- render: match sheet ----------
+  function renderMatch() {
+    const m = currentMatch();
+    $("match").hidden = !m;
+    if (!m) return;
+    const other = !!m.other;
+    $("otherFields").hidden = !other;
+    $("mName").textContent = other ? (m.home && m.away ? `${m.home} v ${m.away}` : "Another match") : `${m.home} v ${m.away}`;
+    $("mKick").textContent = other ? "" : kickText(m);
+    const ref = refFor(other ? null : m);
+    const names = Object.keys(P().referees).sort();
+    $("refSel").innerHTML = `<option value="">Not announced yet</option>` + names.map(n => `<option ${n === ref ? "selected" : ""}>${esc(n)}</option>`).join("");
+    const rr = refRate(ref), r = P().referees[ref]?.games ? P().referees[ref] : null;
+    $("fRef").textContent = rr != null ? rr.toFixed(1) : "–";
+    $("fRefN").textContent = r ? `${r.yellows} yellows in ${r.games} games` : ref ? "no data yet" : "pick the referee";
+    $("fHomeL").textContent = m.home || "Home"; $("fAwayL").textContent = m.away || "Away";
+    const hr = teamRate(m.home), ar = teamRate(m.away);
+    $("fHome").textContent = hr != null ? hr.toFixed(2) : "–";
+    $("fAway").textContent = ar != null ? ar.toFixed(2) : "–";
+    const booked = P().players.filter(pl => pl.team === m.home || pl.team === m.away).sort((a, b) => b.yellows - a.yellows);
+    $("bookedWrap").hidden = !booked.length;
+    $("booked").innerHTML = booked.map(pl => `<span class="chip"><i></i>${esc(pl.name)} <span class="num">${pl.yellows}</span></span>`).join("");
+    $("goBtn").disabled = !sample || (other && !(m.home && m.away));
+    if (!sample) setStatus("Bet analysis needs Claude. Open this page in the Claude app or on claude.ai.", true);
+  }
+  $("refSel").onchange = () => {
+    const key = state.sel === "other" ? "other" : state.sel;
+    state.refOverride[key] = $("refSel").value; saveRefs();
+    renderFixtures(); renderMatch();
+  };
+  $("oHome").oninput = $("oAway").oninput = () => renderMatch();
+  function setStatus(t, err) { $("status").textContent = t; $("status").className = "status" + (err ? " err" : ""); }
+
+  // ---------- analysis ----------
+  function buildPrompt(m) {
+    const p = P();
+    const ref = refFor(m.other ? null : m);
+    const r = p.referees[ref]?.games ? p.referees[ref] : null;
+    const teamLine = t => { const x = p.teams[t]; return x && x.ypg != null ? `${t}: ${x.ypg.toFixed(2)} yellows per game over ${x.games} games` : `${t}: no data this season`; };
+    const players = p.players.filter(pl => pl.team === m.home || pl.team === m.away).map(pl => `- ${pl.name} (${pl.team}): ${pl.yellows} yellows${pl.apps ? ` in ${pl.apps} apps` : ""}${pl.note ? `, ${pl.note}` : ""}`).join("\n") || "- none recorded";
+    const today = new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    return `You are a Premier League card-betting analyst. You specialise in one market: Sportsbet "Player to be carded". A yellow or red card shown to the player counts. The bet is void if the player takes no part. Cards shown after the full-time whistle or to players not on the pitch do not count.
+
+Today is ${today}. Season ${p.season || "2026/27"}. Your own knowledge may be out of date: squads changed in the 2026 summer window, and Coventry City, Hull City and Ipswich Town are newly promoted. Trust the data and team news below over memory. Only pick a player who appears in the Sportsbet odds, the team news, or the data below, or who you are confident is in the current squad and likely to play.
+
+MATCH: ${m.home} v ${m.away}${m.kickoffUtc ? `, kick-off ${new Date(m.kickoffUtc).toUTCString()}` : ""}
+REFEREE: ${ref ? `${ref}${r ? `, ${r.yellows} yellows and ${r.reds} reds in ${r.games} Premier League games this season` : ", no data this season"}` : "not announced yet; assume an average Premier League referee (about 4 yellows per game)"}
+TEAM DISCIPLINE THIS SEASON:
+- ${teamLine(m.home)}
+- ${teamLine(m.away)}
+PLAYERS BOOKED THIS SEASON (partial list):
+${players}
+LAST SEASON NOTE: ${p.lastSeasonNote || "none"}
+
+SPORTSBET ODDS PASTED BY THE USER:
+${$("oddsIn").value.trim() || "(none given)"}
+
+TEAM NEWS OR LINEUPS PASTED BY THE USER:
+${$("newsIn").value.trim() || "(none given)"}
+
+How to judge each player: booking rate per 90 across this season and last season; expected minutes (a likely sub or rotation risk cuts the chance hard); position and direct opponent (full-backs and holding midfielders facing quick, tricky wingers foul most); referee strictness; likely game state (the side with less of the ball fouls more, derbies and relegation fights run hot); history in this fixture; suspension risk (5 yellows before matchweek 19 means a ban, so players on 4 may hold back).
+
+Give your honest probability that each player is carded. If Sportsbet odds were given, only include players where probability × odds is at least 1.05, and copy the odds exactly. If none qualify, return an empty bets list and say why in the summary. If no odds were given, include the 2 to 4 players with the highest chance. Never include more than 5. Write reasoning in Australian English, two or three short, specific sentences, with no em dashes.
+
+Reply with JSON only, in this shape:
+{"summary":"one sentence on the card outlook for this match","bets":[{"player":"full name","team":"team name","probability":0.35,"sportsbetOdds":2.75,"confidence":"high","reasoning":"..."}]}
+Use null for sportsbetOdds when no price was given for that player. confidence is high, medium or low.`;
+  }
+
+  function stakeFor(prob, odds) {
+    if (!odds || odds <= 1) return 0;
+    const f = (prob * odds - 1) / (odds - 1);
+    if (f <= 0) return 0;
+    return Math.min(MAX_STAKE, Math.max(0.25, Math.round(BANK * f * KELLY * 4) / 4));
+  }
+  const minPrice = prob => Math.ceil((1 + MIN_EDGE) / prob * 20) / 20;
+
+  $("goBtn").onclick = async () => {
+    const m = currentMatch(); if (!m || !sample) return;
+    ctl = new AbortController();
+    $("goBtn").disabled = true; $("stopBtn").hidden = false;
+    setStatus("Thinking… this can take up to a minute.");
+    $("results").innerHTML = "";
+    try {
+      const out = await sample.json(buildPrompt(m), { signal: ctl.signal, modelTier: "complex" });
+      const bets = (Array.isArray(out?.bets) ? out.bets : []).filter(b => b && b.player && b.probability > 0 && b.probability < 1).slice(0, 5);
+      state.last = { match: `${m.home} v ${m.away}`, kickoffUtc: m.kickoffUtc || null, summary: String(out?.summary || ""), bets };
+      setStatus("");
+      renderResults();
+    } catch (e) {
+      const msg = { cancelled: "Stopped.", not_granted: "Claude wasn't allowed to run, so there's no analysis. Allow it from the page's permissions to try again.", rate_limited: "Too many requests just now. Wait a minute, then try again." }[e?.code];
+      setStatus(msg || "The analysis didn't come back in a usable form. Try again.", e?.code !== "cancelled");
+    } finally {
+      $("goBtn").disabled = false; $("stopBtn").hidden = true; ctl = null;
+    }
+  };
+  $("stopBtn").onclick = () => ctl?.abort();
+
+  function renderResults() {
+    const L = state.last; if (!L) { $("results").innerHTML = ""; return; }
+    let html = `<p class="summary"><b>${esc(L.match)}.</b> ${esc(L.summary)}</p>`;
+    if (!L.bets.length) html += `<div class="empty">No bets worth taking at these prices.</div>`;
+    L.bets.forEach((b, i) => {
+      const prob = Number(b.probability), fair = 1 / prob, sb = Number(b.sportsbetOdds) || null;
+      const edge = sb ? prob * sb - 1 : null;
+      const take = minPrice(prob);
+      const useOdds = sb || take;
+      const stake = stakeFor(prob, useOdds);
+      const lvl = { high: 3, medium: 2, low: 1 }[b.confidence] || 1;
+      html += `<article class="bet">
+        <div class="bet-head">
+          <div><h3>${esc(b.player)}</h3><span class="small muted">${esc(b.team)} · to be carded</span></div>
+          <div class="conf"><div class="cards" aria-hidden="true">${[1, 2, 3].map(n => `<i class="${n <= lvl ? "on" : ""}"></i>`).join("")}</div><span class="label">${esc(b.confidence || "low")} confidence</span></div>
+        </div>
+        <div class="prices">
+          <div class="price"><span class="label">Chance</span><b>${Math.round(prob * 100)}%</b></div>
+          <div class="price"><span class="label">Fair price</span><b>${price(fair)}</b></div>
+          <div class="price"><span class="label">Take at</span><b>${price(take)}+</b></div>
+          <div class="price"><span class="label">${sb ? "Sportsbet" : "Stake"}</span>${sb ? `<b class="${edge >= 0 ? "pos" : "neg"}">${price(sb)} <span class="small">${edge >= 0 ? "+" : ""}${Math.round(edge * 100)}%</span></b>` : `<b>${stake.toFixed(2)}u</b>`}</div>
+        </div>
+        <p>${esc(b.reasoning)}</p>
+        <div class="add">
+          <div class="field"><label class="label" for="ao${i}">Odds</label><input id="ao${i}" class="num" type="number" step="0.05" min="1.01" inputmode="decimal" value="${useOdds.toFixed(2)}"></div>
+          <div class="field"><label class="label" for="as${i}">Stake (u)</label><input id="as${i}" class="num" type="number" step="0.25" min="0.25" inputmode="decimal" value="${(stake || 0.5).toFixed(2)}"></div>
+          <button class="btn" data-add="${i}">Add to tracker</button>
+        </div>
+      </article>`;
+    });
+    $("results").innerHTML = html;
+    for (const btn of $("results").querySelectorAll("[data-add]")) btn.onclick = () => {
+      const i = Number(btn.dataset.add), b = L.bets[i];
+      const odds = Number($("ao" + i).value), stake = Number($("as" + i).value);
+      if (!(odds > 1) || !(stake > 0)) { btn.textContent = "Check odds and stake"; return; }
+      const id = uid();
+      state.bets[id] = { id, createdAt: new Date().toISOString(), match: L.match, kickoffUtc: L.kickoffUtc, player: String(b.player), team: String(b.team || ""), odds, stake, probability: Number(b.probability), confidence: String(b.confidence || ""), reasoning: String(b.reasoning || ""), status: "pending" };
+      saveBet(id); renderTracker();
+      btn.textContent = "Added"; btn.disabled = true;
+    };
+  }
+
+  // ---------- tracker ----------
+  const profitOf = b => b.status === "won" ? b.stake * (b.odds - 1) : b.status === "lost" ? -b.stake : 0;
+  function renderTracker() {
+    const all = Object.values(state.bets).sort((a, b) => (b.kickoffUtc || b.createdAt) < (a.kickoffUtc || a.createdAt) ? -1 : 1);
+    const settled = all.filter(b => b.status === "won" || b.status === "lost");
+    const won = settled.filter(b => b.status === "won").length;
+    const staked = settled.reduce((s, b) => s + b.stake, 0);
+    const profit = settled.reduce((s, b) => s + profitOf(b), 0);
+    $("tCount").textContent = settled.length;
+    $("tPend").textContent = `${all.filter(b => b.status === "pending").length} pending`;
+    $("tStrike").textContent = settled.length ? Math.round(won / settled.length * 100) + "%" : "–";
+    $("tWL").textContent = `${won} won · ${settled.length - won} lost`;
+    $("tProfit").textContent = units(profit); $("tProfit").className = "num " + (profit > 0 ? "pos" : profit < 0 ? "neg" : "");
+    $("tProfitD").textContent = money(profit * state.unit);
+    $("tRoi").textContent = staked ? (profit >= 0 ? "+" : "") + (profit / staked * 100).toFixed(1) + "%" : "–";
+    $("tRoi").className = "num " + (profit > 0 ? "pos" : profit < 0 ? "neg" : "");
+    $("tStaked").textContent = `${staked.toFixed(2)}u staked`;
+    if (document.activeElement !== $("unitIn")) $("unitIn").value = state.unit;
+    if (!all.length) { $("ledger").innerHTML = `<div class="empty">No bets yet. Find bets on a fixture and tap Add to tracker.</div>`; return; }
+    $("ledger").innerHTML = all.map(b => {
+      const p = profitOf(b);
+      const when = b.kickoffUtc ? new Date(b.kickoffUtc).toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : new Date(b.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+      return `<div class="slip">
+        <div class="slip-top"><div><b>${esc(b.player)}</b> <span class="small muted">to be carded</span></div><span class="small muted">${esc(b.match)} · ${esc(when)}</span></div>
+        <div class="slip-bot">
+          <span class="num small">${price(b.odds)} · ${b.stake.toFixed(2)}u (${money(b.stake * state.unit)})${b.status === "won" || b.status === "lost" ? ` · <b style="color:var(--${p > 0 ? "win" : "red"})">${units(p)}</b>` : ""}</span>
+          <div class="seg" role="group" aria-label="Result">${["pending", "won", "lost", "void"].map(s => `<button data-bet="${esc(b.id)}" data-s="${s}" aria-pressed="${b.status === s}">${s[0].toUpperCase() + s.slice(1)}</button>`).join("")}</div>
+        </div>
+        <div class="slip-bot"><span class="small muted">${b.probability ? `Rated ${Math.round(b.probability * 100)}%` : ""}${b.confidence ? ` · ${esc(b.confidence)} confidence` : ""}</span><button class="linkish danger" data-del="${esc(b.id)}">Delete</button></div>
+      </div>`;
+    }).join("");
+    for (const btn of $("ledger").querySelectorAll("[data-s]")) btn.onclick = () => { const b = state.bets[btn.dataset.bet]; if (!b) return; b.status = btn.dataset.s; saveBet(b.id); renderTracker(); };
+    for (const btn of $("ledger").querySelectorAll("[data-del]")) btn.onclick = () => {
+      if (btn.dataset.armed) { delete state.bets[btn.dataset.del]; saveBet(btn.dataset.del); renderTracker(); }
+      else { btn.dataset.armed = "1"; btn.textContent = "Tap again to delete"; }
+    };
+  }
+  $("unitIn").onchange = () => { const v = Number($("unitIn").value); if (v > 0) { state.unit = v; saveSettings(); renderTracker(); } };
+
+  // ---------- data tab ----------
+  function renderData() {
+    const p = state.pack; if (!p) return;
+    $("dAsOf").textContent = `As of ${new Date(p.asOf + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long" })}`;
+    const refs = Object.entries(p.referees).map(([n, r]) => ({ n, ...r, rate: r.games ? r.yellows / r.games : null })).sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));
+    $("refTable").innerHTML = `<thead><tr><th>Referee</th><th class="num">Games</th><th class="num">Yellows</th><th class="num">Reds</th><th class="num">Per game</th></tr></thead><tbody>` +
+      refs.map(r => `<tr><td>${esc(r.n)}</td><td class="num">${r.games ?? "–"}</td><td class="num">${r.yellows ?? "–"}</td><td class="num">${r.reds ?? "–"}</td><td class="num">${r.rate != null ? r.rate.toFixed(1) : "–"}</td></tr>`).join("") + `</tbody>`;
+    const teams = Object.entries(p.teams).sort((a, b) => (b[1].ypg ?? -1) - (a[1].ypg ?? -1));
+    $("teamTable").innerHTML = `<thead><tr><th>Team</th><th class="num">Games</th><th class="num">Yellows per game</th></tr></thead><tbody>` +
+      teams.map(([n, t]) => `<tr><td>${esc(n)}</td><td class="num">${t.games ?? "–"}</td><td class="num">${t.ypg != null ? t.ypg.toFixed(2) : "no data"}</td></tr>`).join("") + `</tbody>`;
+    $("dNotes").textContent = p.notes || "";
+    $("dSources").innerHTML = (p.sources || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("");
+  }
+
+  // ---------- boot ----------
+  try { const t = localStorage.getItem("cardsharp-tab"); if (t === "track" || t === "data") showTab(t); } catch {}
+  renderTracker();
+
+  (async () => {
+    const C = window.claude;
+    const [dbNs, userNs, sampleFn] = await Promise.all([C?.use("db"), C?.use("user"), C?.use("sample")].map(p => Promise.resolve(p).catch(() => null)));
+    sample = sampleFn || null;
+    if (dbNs) {
+      db = dbNs;
+      db.doc("packs/current").onSnapshot(snap => {
+        if (!snap.exists) { $("days").innerHTML = `<div class="empty">This week's fixtures haven't been loaded yet. Ask Claude to refresh the data pack.</div>`; return; }
+        state.pack = snap.data(); renderFixtures(); renderMatch(); renderData();
+      }, () => { $("days").innerHTML = `<div class="empty">Couldn't load this week's fixtures. Reload to try again.</div>`; });
+    } else {
+      $("days").innerHTML = `<div class="empty">Sign in to Claude to load this week's fixtures and referee data.</div>`;
+    }
+    const id = userNs ? await userNs.id().catch(() => null) : null;
+    if (dbNs && id) {
+      base = db.collection("data/users/" + id);
+      setSync("Saved to your Claude account. Private to you.");
+      base.onSnapshot(snap => {
+        const next = {};
+        for (const d of snap.docs) {
+          const body = d.data();
+          if (d.id === "settings") { if (body.unit > 0) state.unit = body.unit; }
+          else if (d.id.startsWith("bet-")) next[body.id] = body;
+        }
+        state.bets = next; renderTracker();
+      }, () => setSync("Lost connection to your saved bets. Reload to reconnect."));
+    } else {
+      lsLoad(); renderTracker();
+      setSync("Not signed in, so bets are only kept in this browser.");
+    }
+    if (!sample) renderMatch();
+  })();
+})();
+</script>
