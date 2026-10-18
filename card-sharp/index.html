@@ -153,6 +153,8 @@ td.num, th.num { text-align: right; }
 .game-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
 .game-meta b { color: var(--ink); font-weight: 600; }
 .outlook { font-size: 0.95rem; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--hair); font-size: 0.78rem; font-weight: 600; }
+.badge.ok { background: var(--win-soft); border-color: var(--win); color: var(--win); }
 .absent { font-size: 0.82rem; color: var(--muted); }
 .picks { display: flex; flex-direction: column; gap: 10px; }
 .best { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
@@ -213,7 +215,8 @@ td.num, th.num { text-align: right; }
       <p>Each pick weighs the player's booking rate, expected minutes, the opponent they'll be up against, the referee, and how the match is likely to play out. Teams without the ball foul more, and derbies and relegation fights run hot.</p>
       <p>Each pick's chance is turned into a fair price. <b>Take at</b> is the lowest Sportsbet price that still gives at least a 5% edge. If Sportsbet is offering less, skip the bet. Stakes are quarter Kelly on a 100-unit bank, capped at 3 units, and go up when you enter a bigger price.</p>
       <ul>
-        <li>Picks are refreshed every Tuesday, once referees are announced, and every Friday with the latest team news.</li>
+        <li>Picks are refreshed every morning (Sydney time) with the latest team news, injuries and referee appointments.</li>
+        <li>About 45 minutes before each kick-off, once lineups are out, the picks for that game are checked again. Benched players are dropped and the game is marked "Lineups confirmed".</li>
         <li>Lineups land about an hour before kick-off. If your player is on the bench, think twice: a sub has far fewer minutes to get booked, though the bet stands if they come on.</li>
       </ul>
     </div>
@@ -297,12 +300,19 @@ td.num, th.num { text-align: right; }
   }
   const minPrice = prob => Math.ceil((1 + MIN_EDGE) / prob * 20) / 20;
   const CONF = { high: 3, medium: 2, low: 1 };
+  function ago(iso) {
+    const d = new Date(iso), mins = Math.round((Date.now() - d) / 60000);
+    if (mins < 2) return "just now";
+    if (mins < 60) return `${mins} min ago`;
+    if (mins < 24 * 60) return `${Math.round(mins / 60)} h ago`;
+    return d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+  }
 
   // ---------- render: this week's games ----------
   function renderGames() {
     const p = state.pack; if (!p) return;
     $("mwTitle").textContent = `Matchweek ${p.matchweek} bets`;
-    $("asOf").textContent = `Updated ${new Date(p.analysedAt || p.asOf + "T00:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "long" })}`;
+    $("asOf").textContent = `Updated ${ago(p.analysedAt || p.asOf + "T00:00:00")}`;
     const fixtures = [...p.fixtures].sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1);
     const all = [];
     let html = "", lastDay = "";
@@ -317,6 +327,8 @@ td.num, th.num { text-align: right; }
           <h2>${esc(f.home)} v ${esc(f.away)}</h2>
           <div class="game-meta">
             <span>${esc(kickText(f))}</span>
+            <span class="badge ${f.lineupsConfirmed ? "ok" : ""}">${f.lineupsConfirmed ? "Lineups confirmed" : "Lineups not out yet"}</span>
+            ${an.updatedAt ? `<span>Checked ${esc(ago(an.updatedAt))}</span>` : ""}
             <span>${f.referee ? `Ref <b>${esc(f.referee)}</b>${rr != null ? ` (${rr.toFixed(1)} yellows a game)` : ""}` : "Referee not announced yet"}</span>
             ${hr != null || ar != null ? `<span>Team yellows a game: ${esc(f.home)} <b>${hr != null ? hr.toFixed(1) : "–"}</b>, ${esc(f.away)} <b>${ar != null ? ar.toFixed(1) : "–"}</b></span>` : ""}
           </div>
@@ -442,7 +454,7 @@ td.num, th.num { text-align: right; }
     if (dbNs) {
       db = dbNs;
       db.doc("packs/current").onSnapshot(snap => {
-        if (!snap.exists) { $("games").innerHTML = `<div class="empty">This week's bets haven't been loaded yet. They're updated every Tuesday and Friday.</div>`; return; }
+        if (!snap.exists) { $("games").innerHTML = `<div class="empty">This week's bets haven't been loaded yet. They're updated every morning.</div>`; return; }
         state.pack = snap.data(); renderGames(); renderData();
       }, () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
     } else {
