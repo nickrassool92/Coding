@@ -19,15 +19,16 @@ UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like 
 FPL = "https://fantasy.premierleague.com/api/"
 FOTMOB = "https://www.fotmob.com/api/data/"
 MAX_GOALS = 8
-# Fitted by backtest.py on the 2025/26 season and checked on 2026/27 (see the backtest in the app).
+# Fitted by backtest.py on all 380 games of 2025/26, then checked on 2026/27 (see the backtest in the app).
+# A shorter half-life (fading older games faster) made predictions worse, so it is effectively off.
 PARAMS = {
-    "prior_games": 12,     # weight of last season's per-game rates, in games
-    "half_life": 100000,   # days for a game's weight to halve (recent form counts more)
-    "xg_weight": 0.75,     # this season: mix of expected goals and actual goals
-    "home": 1.10,          # multiplier on the home side's expected goals
-    "away": 0.92,          # multiplier on the away side's expected goals
-    "rho": -0.06,          # Dixon-Coles correction for 0-0, 1-0, 0-1 and 1-1
-    "draw_boost": 0.0,     # extra weight on every drawn score, then renormalised
+    "prior_games": 6,      # weight of last season's per-game rates, in games
+    "half_life": 365,      # days for a game's weight to halve
+    "xg_weight": 0.6,      # this season: mix of expected goals and actual goals
+    "home": 1.12,          # multiplier on the home side's expected goals
+    "away": 0.88,          # multiplier on the away side's expected goals
+    "rho": 0.0,            # Dixon-Coles correction for 0-0, 1-0, 0-1 and 1-1
+    "draw_boost": 0.2,     # extra weight on every drawn score, then renormalised (draws were underrated)
 }
 ALIASES = {"AFC Bournemouth": "Bournemouth", "Brighton & Hove Albion": "Brighton", "Leeds United": "Leeds",
            "Manchester City": "Man City", "Manchester United": "Man Utd", "Newcastle United": "Newcastle",

@@ -113,7 +113,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
   <div id="games" class="games"><div class="empty">Loading this gameweek's predictions…</div></div>
   <section class="panel" id="btPanel" hidden>
     <h2>Backtest</h2>
-    <p class="small muted">Every game played so far this season, predicted using only what was known before kick-off (matches already played plus last season). Missing players weren't included, because past team news isn't available.</p>
+    <p class="small muted">Each game is predicted using only what was known before kick-off: matches already played plus the season before. The settings were fitted on last season's 380 games and then checked on this season, which the fitting never saw. Missing players aren't included, because past team news isn't available.</p>
     <div class="tablewrap"><table id="btSummary"></table></div>
     <p class="small muted">Brier score measures how good the win, draw and loss chances were. Lower is better, and 0.667 is the same as guessing.</p>
     <details><summary class="small">See every game</summary><div class="tablewrap" style="margin-top:8px"><table id="btGames"></table></div></details>
@@ -194,9 +194,20 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
     const bt = d.backtest;
     if (bt) {
       $("btPanel").hidden = false;
-      const s = bt.summary, b = bt.baselines;
-      const row = (name, right, brier, exact) => `<tr><td>${name}</td><td class="n">${right}/${s.games} (${Math.round(right / s.games * 100)}%)</td><td class="n">${exact ?? "–"}</td><td class="n">${brier.toFixed(3)}</td></tr>`;
-      $("btSummary").innerHTML = `<thead><tr><th></th><th class="n">Results right</th><th class="n">Exact</th><th class="n">Brier score</th></tr></thead><tbody>${row("<b>Full Time</b>", s.right, s.brier, s.exact)}${row("Always back the home team", b.always_home.right, b.always_home.brier)}${row("Coin flip", b.coin_flip.right, b.coin_flip.brier)}</tbody>`;
+      const s = bt.summary, b = bt.baselines, ls = bt.last_season, pm = bt.previous_model;
+      const row = (name, games, right, exact, brier) => `<tr><td>${name}</td><td class="n">${right}/${games} (${Math.round(right / games * 100)}%)</td><td class="n">${exact ?? "–"}</td><td class="n">${brier.toFixed(3)}</td></tr>`;
+      const head = t => `<tr><th colspan="4" style="padding-top:10px">${t}</th></tr>`;
+      $("btSummary").innerHTML = `<thead><tr><th></th><th class="n">Results right</th><th class="n">Exact</th><th class="n">Brier score</th></tr></thead><tbody>` +
+        head(`This season, ${s.games} games (not used for fitting)`) +
+        row("<b>Full Time</b>", s.games, s.right, s.exact, s.brier) +
+        (pm ? row("Previous settings", s.games, pm.this_season.right, pm.this_season.exact, pm.this_season.brier) : "") +
+        row("Always back the home team", s.games, b.always_home.right, null, b.always_home.brier) +
+        row("Coin flip", s.games, b.coin_flip.right, null, b.coin_flip.brier) +
+        (ls ? head(`Last season, ${ls.summary.games} games (used to fit the settings)`) +
+          row("<b>Full Time</b>", ls.summary.games, ls.summary.right, ls.summary.exact, ls.summary.brier) +
+          (pm ? row("Previous settings", ls.summary.games, pm.last_season.right, pm.last_season.exact, pm.last_season.brier) : "") +
+          row("Always back the home team", ls.summary.games, ls.baselines.always_home.right, null, ls.baselines.always_home.brier) : "") +
+        `</tbody>`;
       $("btGames").innerHTML = `<thead><tr><th>GW</th><th>Game</th><th class="n">Predicted</th><th class="n">Result</th><th></th></tr></thead><tbody>${bt.games.map(g => `<tr><td class="n">${g.gw}</td><td>${esc(g.match)}</td><td class="n">${g.pred[0]}-${g.pred[1]}</td><td class="n">${g.result[0]}-${g.result[1]}</td><td style="color:var(--${g.right ? "good" : "bad"})">${g.exact ? "Exact" : g.right ? "Right" : "Wrong"}</td></tr>`).join("")}</tbody>`;
     }
 
