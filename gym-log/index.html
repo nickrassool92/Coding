@@ -1,0 +1,724 @@
+<title>Iron Log</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;600;700&family=Red+Hat+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: phone-first single column. Tabs up top, workout cards as set tables, rest timer docked to the bottom. Plate colours (IWF red/blue/yellow/green) mark state. */
+:root {
+  --bg: #EEF0F3;
+  --surface: #FFFFFF;
+  --ink: #14171C;
+  --muted: #5E6672;
+  --hair: #D5DAE1;
+  --chalk: #F7F8FA;
+  --accent: #1F4FD1;      /* blue 20 kg plate */
+  --accent-ink: #FFFFFF;
+  --done: #1E8A4C;        /* green 10 kg plate */
+  --done-soft: #DDF1E4;
+  --pr: #D42A2A;          /* red 25 kg plate */
+  --pr-soft: #FBE1E1;
+  --warm: #E3A500;        /* yellow 15 kg plate */
+  --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --mono: "Red Hat Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1114; --surface: #181B20; --ink: #E8EBEF; --muted: #98A0AC; --hair: #2B3038; --chalk: #1E2228;
+    --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1114; --surface: #181B20; --ink: #E8EBEF; --muted: #98A0AC; --hair: #2B3038; --chalk: #1E2228;
+  --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 120px;
+}
+.app { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: 0.01em; }
+h1 { font-size: 2rem; font-weight: 800; text-transform: uppercase; line-height: 1; }
+h2 { font-size: 1.4rem; font-weight: 800; text-transform: uppercase; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 3px; overflow-x: auto; }
+.tabs button { border: 0; background: transparent; padding: 7px 12px; border-radius: 7px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+
+.btn { border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); }
+.btn.big { width: 100%; padding: 16px; font-size: 1.1rem; font-family: var(--display); text-transform: uppercase; letter-spacing: 0.04em; font-size: 1.3rem; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--hair); }
+.btn.danger { background: var(--pr); color: #fff; }
+.btn.done { background: var(--done); color: #fff; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 700; }
+.link.muted { color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.stat b { display: block; font-family: var(--mono); font-size: 1.35rem; font-weight: 700; }
+
+.quick { display: flex; flex-direction: column; gap: 8px; }
+.quick button { display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 12px 14px; }
+.quick button span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.quick b { display: block; }
+
+/* Active workout */
+.wk-head { display: flex; align-items: center; gap: 10px; }
+.wk-head input { flex: 1; min-width: 0; font-family: var(--display); font-size: 1.5rem; font-weight: 800; text-transform: uppercase; border: 0; border-bottom: 2px solid var(--hair); background: transparent; padding: 2px 0; }
+.wk-head .clock { font-family: var(--mono); font-weight: 700; color: var(--muted); }
+.ex { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden; }
+.ex-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px 14px 6px; }
+.ex-top > div { min-width: 0; }
+.ex-top h3 { overflow-wrap: anywhere; }
+.ex-menu { display: flex; gap: 4px; flex: none; }
+.ex-menu button { border: 1px solid var(--hair); background: var(--chalk); border-radius: 8px; width: 34px; height: 34px; font-weight: 700; color: var(--muted); }
+.sets { width: 100%; border-collapse: collapse; }
+.sets th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; padding: 4px 4px; text-align: center; }
+.sets td { padding: 4px; text-align: center; vertical-align: middle; }
+.sets td:first-child, .sets th:first-child { padding-left: 14px; width: 2.4em; }
+.sets td:last-child, .sets th:last-child { padding-right: 14px; width: 48px; }
+.sets .prev { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.sets input { width: 100%; min-width: 0; max-width: 84px; text-align: center; font-family: var(--mono); font-weight: 700; font-size: 1rem; border: 1px solid var(--hair); background: var(--chalk); border-radius: 8px; padding: 8px 4px; }
+.sets tr.done td { background: var(--done-soft); }
+.sets tr.done input { background: transparent; border-color: transparent; }
+.tick { width: 38px; height: 38px; border-radius: 8px; border: 2px solid var(--hair); background: var(--surface); font-weight: 800; color: var(--muted); }
+tr.done .tick { background: var(--done); border-color: var(--done); color: #fff; }
+.setno { font-family: var(--mono); font-weight: 700; color: var(--muted); }
+.setno button { border: 0; background: none; font: inherit; color: inherit; padding: 4px; }
+.pr { display: inline-block; background: var(--pr); color: #fff; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em; border-radius: 4px; padding: 1px 4px; vertical-align: middle; }
+.ex-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 14px 12px; flex-wrap: wrap; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; background: var(--pr-soft); }
+.confirm span { flex: 1 1 160px; }
+
+/* Rest timer */
+.rest { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--ink); color: var(--bg);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.rest .in { max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+.rest .t { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; flex: 1; }
+.rest .t small { font-family: var(--body); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; display: block; }
+.rest button { background: transparent; color: inherit; border: 1px solid currentColor; border-radius: 8px; padding: 8px 10px; font-weight: 700; }
+.rest .bar { position: absolute; left: 0; top: 0; height: 3px; background: var(--warm); }
+.rest.over .t { color: var(--warm); }
+
+/* Picker */
+.picker { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px)); }
+.picker .inner { max-width: 560px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; padding-top: 12px; }
+.picker .ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.search { width: 100%; padding: 12px 14px; font-size: 1.05rem; border: 2px solid var(--ink); border-radius: 10px; background: var(--surface); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.chip { flex: none; border: 1px solid var(--hair); background: var(--surface); border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: 0.9rem; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.plist { flex: 1; overflow-y: auto; min-height: 0; margin: 0 -4px; padding: 0 4px 12px; }
+.plist h4 { margin: 12px 0 4px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.prow { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--hair); padding: 11px 2px; }
+.prow .nm { flex: 1; min-width: 0; }
+.prow .nm b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.prow .nm span { font-size: 0.8rem; color: var(--muted); }
+.prow .box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--hair); flex: none; display: grid; place-items: center; font-weight: 800; font-size: 0.85rem; }
+.prow[aria-pressed="true"] .box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.prow .star { color: var(--warm); }
+.pfoot { display: flex; gap: 10px; padding: 10px 0 12px; border-top: 1px solid var(--hair); }
+.pfoot .btn { flex: 1; }
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; font-weight: 700; min-width: 0; }
+.form label.wide { grid-column: 1 / -1; }
+.form input, .form select { padding: 9px 10px; border: 1px solid var(--hair); border-radius: 8px; background: var(--surface); min-width: 0; width: 100%; }
+
+/* History & progress */
+.hist { display: flex; flex-direction: column; gap: 10px; }
+.hcard { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; }
+.hcard > button { width: 100%; text-align: left; background: none; border: 0; padding: 12px 14px; display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.hcard > button > div { min-width: 0; }
+.hcard .meta { font-size: 0.85rem; color: var(--muted); }
+.hbody { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.hline { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.hline b { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.hline .num { font-size: 0.85rem; color: var(--muted); text-align: right; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.plp { display: flex; flex-direction: column; }
+.plp button { display: flex; justify-content: space-between; align-items: center; gap: 12px; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--hair); padding: 12px 0; }
+.plp button > span:first-child { min-width: 0; }
+.plp b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.plp .num { font-weight: 700; white-space: nowrap; }
+.mus { display: grid; grid-template-columns: 7.5em 1fr 2.5em; gap: 6px 10px; align-items: center; font-size: 0.9rem; }
+.mus .b { height: 10px; background: var(--chalk); border-radius: 5px; overflow: hidden; }
+.mus .b span { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+.mus .b span.hi { background: var(--done); }
+.chart svg { width: 100%; height: auto; display: block; }
+.prgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.empty { padding: 20px; border: 2px dashed var(--hair); border-radius: 12px; text-align: center; color: var(--muted); }
+.sync { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; max-width: calc(100% - 32px); }
+@media (max-width: 400px) { .stats { grid-template-columns: 1fr 1fr; } .stats .stat:last-child { grid-column: 1 / -1; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>Iron Log</h1>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="t-workout" aria-selected="true">Workout</button>
+      <button role="tab" id="t-history" aria-selected="false">History</button>
+      <button role="tab" id="t-progress" aria-selected="false">Progress</button>
+    </nav>
+  </header>
+
+  <section id="v-workout" style="display:flex;flex-direction:column;gap:16px"></section>
+  <section id="v-history" hidden style="display:flex;flex-direction:column;gap:16px"></section>
+  <section id="v-progress" hidden style="display:flex;flex-direction:column;gap:16px"></section>
+
+  <div class="sync" id="sync">Connecting…</div>
+</div>
+
+<div class="rest" id="rest" hidden>
+  <div class="bar" id="restBar"></div>
+  <div class="in">
+    <div class="t num" id="restT"><small>Rest</small>0:00</div>
+    <button id="restMinus" aria-label="15 seconds less">−15</button>
+    <button id="restPlus" aria-label="15 seconds more">+15</button>
+    <button id="restSkip">Skip</button>
+  </div>
+</div>
+
+<div class="picker" id="picker" hidden>
+  <div class="inner">
+    <div class="ph"><h2 id="pickTitle">Add exercises</h2><button class="link" id="pickClose">Close</button></div>
+    <input class="search" id="pickSearch" type="search" placeholder="Search 300+ exercises (e.g. rdl, incline, cable)" autocomplete="off">
+    <div class="chips" id="pickMuscles"></div>
+    <div class="chips" id="pickEquip"></div>
+    <div class="plist" id="pickList"></div>
+    <div class="pfoot" id="pickFoot">
+      <button class="btn ghost" id="pickCustom">Create exercise</button>
+      <button class="btn" id="pickAdd" disabled>Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  // ---------- exercise library ----------
+  const EQUIP = { BB: "Barbell", DB: "Dumbbell", CB: "Cable", MC: "Machine", SM: "Smith machine", BW: "Bodyweight", KB: "Kettlebell", BD: "Band", EZ: "EZ bar", TB: "Trap bar", PL: "Plate", OT: "Other" };
+  const KINDS = {
+    wr: { a: "kg", b: "reps" },
+    bw: { a: "+kg", b: "reps" },
+    time: { a: "+kg", b: "sec" },
+    cardio: { a: "min", b: "km" },
+    carry: { a: "kg", b: "m" }
+  };
+  const RAW = {
+    Chest: `Barbell Bench Press;BB|Incline Barbell Bench Press;BB|Decline Barbell Bench Press;BB|Paused Bench Press;BB|Spoto Press;BB|Floor Press;BB|Larsen Press;BB|Dumbbell Bench Press;DB|Incline Dumbbell Press;DB|Decline Dumbbell Press;DB|Dumbbell Floor Press;DB|Neutral-Grip Dumbbell Press;DB|Squeeze Press;DB|Dumbbell Fly;DB|Incline Dumbbell Fly;DB|Dumbbell Pullover;DB|Smith Machine Bench Press;SM|Smith Machine Incline Press;SM|Machine Chest Press;MC|Incline Machine Chest Press;MC|Hammer Strength Chest Press;MC|Pec Deck;MC|Cable Fly;CB|High-to-Low Cable Fly;CB|Low-to-High Cable Fly;CB|Single-Arm Cable Fly;CB|Cable Chest Press;CB|Landmine Press;BB|Svend Press;PL|Band Chest Press;BD|Push-Up;BW;bw|Incline Push-Up;BW;bw|Decline Push-Up;BW;bw|Deficit Push-Up;BW;bw|Archer Push-Up;BW;bw|Chest Dip;BW;bw|Ring Push-Up;OT;bw`,
+    Back: `Deadlift;BB|Sumo Deadlift;BB|Trap Bar Deadlift;TB|Deficit Deadlift;BB|Pause Deadlift;BB|Rack Pull;BB|Snatch-Grip Deadlift;BB|Barbell Row;BB|Pendlay Row;BB|Yates Row;BB|Seal Row;BB|T-Bar Row;BB|Chest-Supported T-Bar Row;MC|Meadows Row;BB|Dumbbell Row;DB|Chest-Supported Dumbbell Row;DB|Kroc Row;DB|Renegade Row;DB|Smith Machine Row;SM|Seated Cable Row;CB|Wide-Grip Seated Cable Row;CB|Single-Arm Cable Row;CB|Machine Row;MC|Hammer Strength Row;MC|Lat Pulldown;CB|Close-Grip Lat Pulldown;CB|Neutral-Grip Lat Pulldown;CB|Underhand Lat Pulldown;CB|Single-Arm Lat Pulldown;CB|Machine Lat Pulldown;MC|Straight-Arm Pulldown;CB|Cable Pullover;CB|Pull-Up;BW;bw|Chin-Up;BW;bw|Neutral-Grip Pull-Up;BW;bw|Wide-Grip Pull-Up;BW;bw|Assisted Pull-Up (assistance kg);MC|Inverted Row;BW;bw|Back Extension;BW;bw|Reverse Hyperextension;MC|Superman;BW;bw|Barbell Shrug;BB|Dumbbell Shrug;DB|Trap Bar Shrug;TB|Smith Machine Shrug;SM|Cable Shrug;CB|Band Lat Pulldown;BD`,
+    Shoulders: `Overhead Press;BB|Push Press;BB|Seated Barbell Shoulder Press;BB|Behind-the-Neck Press;BB|Z Press;BB|Dumbbell Shoulder Press;DB|Seated Dumbbell Shoulder Press;DB|Arnold Press;DB|Single-Arm Dumbbell Press;DB|Machine Shoulder Press;MC|Smith Machine Shoulder Press;SM|Landmine Shoulder Press;BB|Kettlebell Press;KB|Dumbbell Lateral Raise;DB|Seated Lateral Raise;DB|Lean-Away Lateral Raise;DB|Cable Lateral Raise;CB|Machine Lateral Raise;MC|Lu Raise;DB|Dumbbell Front Raise;DB|Plate Front Raise;PL|Cable Front Raise;CB|Barbell Front Raise;BB|Rear Delt Fly;DB|Chest-Supported Rear Delt Fly;DB|Reverse Pec Deck;MC|Cable Rear Delt Fly;CB|Face Pull;CB|Band Pull-Apart;BD|Upright Row;BB|Cable Upright Row;CB|Dumbbell Upright Row;DB|Y-Raise;DB|Cuban Press;DB|Cable External Rotation;CB|Dumbbell External Rotation;DB|Cable Internal Rotation;CB|Handstand Push-Up;BW;bw|Pike Push-Up;BW;bw`,
+    Biceps: `Barbell Curl;BB|EZ Bar Curl;EZ|Dumbbell Curl;DB|Alternating Dumbbell Curl;DB|Hammer Curl;DB|Cross-Body Hammer Curl;DB|Incline Dumbbell Curl;DB|EZ Bar Preacher Curl;EZ|Dumbbell Preacher Curl;DB|Machine Preacher Curl;MC|Concentration Curl;DB|Spider Curl;DB|Bayesian Cable Curl;CB|Cable Curl;CB|Rope Hammer Curl;CB|High Cable Curl;CB|Drag Curl;BB|Zottman Curl;DB|21s;EZ|Machine Bicep Curl;MC|Band Curl;BD`,
+    Triceps: `Close-Grip Bench Press;BB|JM Press;BB|EZ Bar Skull Crusher;EZ|Dumbbell Skull Crusher;DB|Dumbbell Overhead Tricep Extension;DB|Cable Overhead Tricep Extension;CB|EZ Bar Overhead Extension;EZ|Rope Tricep Pushdown;CB|Straight Bar Tricep Pushdown;CB|V-Bar Tricep Pushdown;CB|Reverse-Grip Pushdown;CB|Single-Arm Cable Pushdown;CB|Cable Tricep Kickback;CB|Dumbbell Tricep Kickback;DB|Cross-Body Cable Extension;CB|Tate Press;DB|Machine Tricep Extension;MC|Machine Dip;MC|Tricep Dip;BW;bw|Bench Dip;BW;bw|Diamond Push-Up;BW;bw`,
+    Forearms: `Barbell Wrist Curl;BB|Dumbbell Wrist Curl;DB|Reverse Wrist Curl;DB|Behind-the-Back Wrist Curl;BB|Reverse Curl;EZ|Wrist Roller;OT|Gripper;OT;bw|Plate Pinch;PL;time|Dead Hang;BW;time`,
+    Quads: `Back Squat;BB|Low-Bar Squat;BB|Front Squat;BB|Pause Squat;BB|Box Squat;BB|Safety Bar Squat;BB|Zercher Squat;BB|Overhead Squat;BB|Goblet Squat;DB|Kettlebell Goblet Squat;KB|Dumbbell Squat;DB|Heel-Elevated Squat;DB|Smith Machine Squat;SM|Hack Squat;MC|Pendulum Squat;MC|Belt Squat;MC|Leg Press;MC|Single-Leg Leg Press;MC|Leg Extension;MC|Single-Leg Leg Extension;MC|Bulgarian Split Squat;DB|Barbell Bulgarian Split Squat;BB|Smith Machine Split Squat;SM|Walking Lunge;DB|Reverse Lunge;DB|Forward Lunge;DB|Barbell Lunge;BB|Lateral Lunge;DB|Step-Up;DB|Spanish Squat;BD|Sissy Squat;BW;bw|Bodyweight Squat;BW;bw|Pistol Squat;BW;bw|Jump Squat;BW;bw|Reverse Nordic;BW;bw|Wall Sit;BW;time`,
+    Hamstrings: `Romanian Deadlift;BB|Dumbbell Romanian Deadlift;DB|Single-Leg Romanian Deadlift;DB|Kettlebell Romanian Deadlift;KB|Stiff-Leg Deadlift;BB|Good Morning;BB|Lying Leg Curl;MC|Seated Leg Curl;MC|Standing Leg Curl;MC|Cable Leg Curl;CB|Nordic Hamstring Curl;BW;bw|Glute-Ham Raise;BW;bw|Swiss Ball Leg Curl;OT;bw|Sliding Leg Curl;BW;bw`,
+    Glutes: `Barbell Hip Thrust;BB|B-Stance Hip Thrust;BB|Dumbbell Hip Thrust;DB|Machine Hip Thrust;MC|Smith Machine Hip Thrust;SM|Single-Leg Hip Thrust;BW;bw|Barbell Glute Bridge;BB|Glute Bridge;BW;bw|Cable Pull-Through;CB|Cable Glute Kickback;CB|Glute Kickback Machine;MC|Hip Abduction Machine;MC|Hip Adduction Machine;MC|Cable Hip Abduction;CB|Cable Hip Adduction;CB|Banded Lateral Walk;BD;bw|Clamshell;BD;bw|Frog Pump;BW;bw|Kettlebell Swing;KB|Sumo Squat;DB|Curtsy Lunge;DB|Copenhagen Plank;BW;time`,
+    Calves: `Standing Calf Raise;MC|Seated Calf Raise;MC|Smith Machine Calf Raise;SM|Leg Press Calf Raise;MC|Donkey Calf Raise;MC|Barbell Calf Raise;BB|Single-Leg Calf Raise;DB|Bodyweight Calf Raise;BW;bw|Tibialis Raise;OT;bw`,
+    Abs: `Plank;BW;time|Side Plank;BW;time|Hollow Hold;BW;time|L-Sit;BW;time|Crunch;BW;bw|Cable Crunch;CB|Machine Crunch;MC|Decline Crunch;BW;bw|Sit-Up;BW;bw|Decline Sit-Up;BW;bw|Hanging Leg Raise;BW;bw|Hanging Knee Raise;BW;bw|Captain's Chair Leg Raise;MC;bw|Lying Leg Raise;BW;bw|Toes-to-Bar;BW;bw|Ab Wheel Rollout;OT;bw|Russian Twist;PL;bw|Bicycle Crunch;BW;bw|Dead Bug;BW;bw|Bird Dog;BW;bw|V-Up;BW;bw|Dragon Flag;BW;bw|Mountain Climber;BW;bw|Flutter Kick;BW;time|Pallof Press;CB|Cable Woodchopper;CB|Landmine Rotation;BB`,
+    "Full body": `Power Clean;BB|Hang Clean;BB|Clean and Jerk;BB|Snatch;BB|Power Snatch;BB|Hang Snatch;BB|Clean Pull;BB|Thruster;BB|Dumbbell Thruster;DB|Dumbbell Snatch;DB|Kettlebell Clean;KB|Kettlebell Snatch;KB|Turkish Get-Up;KB|Man Maker;DB|Wall Ball;OT|Medicine Ball Slam;OT|Burpee;BW;bw|Box Jump;BW;bw|Broad Jump;BW;bw|Tyre Flip;OT;bw|Farmer's Carry;DB;carry|Trap Bar Carry;TB;carry|Suitcase Carry;DB;carry|Overhead Carry;DB;carry|Sandbag Carry;OT;carry|Sled Push;OT;carry|Sled Pull;OT;carry|Battle Ropes;OT;time`,
+    Cardio: `Treadmill Run;MC;cardio|Incline Treadmill Walk;MC;cardio|Outdoor Run;BW;cardio|Stationary Bike;MC;cardio|Spin Bike;MC;cardio|Assault Bike;MC;cardio|Rowing Machine;MC;cardio|SkiErg;MC;cardio|Elliptical;MC;cardio|Stair Climber;MC;cardio|Jump Rope;OT;cardio|Swimming;OT;cardio|Outdoor Cycling;OT;cardio`
+  };
+  const MUSCLES = Object.keys(RAW);
+  const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const LIB = {};
+  for (const m of MUSCLES) for (const line of RAW[m].split("|")) {
+    const [name, eq, kind] = line.split(";");
+    const id = slug(name);
+    if (!LIB[id]) LIB[id] = { id, name, muscle: m, equip: eq, kind: kind || "wr" };
+  }
+  const ALIASES = { rdl: "romanian deadlift", sldl: "stiff leg deadlift", ohp: "overhead press", bss: "bulgarian split squat", skullcrusher: "skull crusher", skullcrushers: "skull crusher", pullup: "pull up", pullups: "pull up", chinup: "chin up", pushup: "push up", pushups: "push up", lat: "lat pulldown", ghr: "glute ham raise", hspu: "handstand push up", db: "dumbbell", bb: "barbell", kb: "kettlebell", ez: "ez bar", squats: "squat", lunges: "lunge", curls: "curl", rows: "row", dips: "dip", flys: "fly", flyes: "fly", erg: "rowing machine", bench: "bench press" };
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = v => { const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) ? n : null; };
+  const fmtN = (n, d = 1) => n == null ? "" : (Math.round(n * 10 ** d) / 10 ** d).toLocaleString("en-AU");
+  const dayName = t => new Date(t).toLocaleDateString("en-AU", { weekday: "long" });
+  const dateShort = t => new Date(t).toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" });
+  const dur = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m} min`; };
+  const clock = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  function weekStart(t) { const d = new Date(t); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d.getTime(); }
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => t.hidden = true, 2600); }
+
+  // ---------- state ----------
+  const state = { workouts: {}, active: null, settings: { custom: [], favs: [], rest: 90 }, tab: "workout", openHist: null, confirm: null, detail: null, pick: null };
+  let base = null;
+  const exInfo = id => LIB[id] || state.settings.custom.find(c => c.id === id) || { id, name: id, muscle: "Other", equip: "OT", kind: "wr" };
+  const allEx = () => Object.values(LIB).concat(state.settings.custom || []);
+  const finished = () => Object.values(state.workouts).sort((a, b) => b.start - a.start);
+
+  // ---------- storage ----------
+  const LS = "ironlog-v1";
+  function lsLoad() { try { const v = JSON.parse(localStorage.getItem(LS) || "null"); if (v) { state.workouts = v.workouts || {}; state.active = v.active || null; Object.assign(state.settings, v.settings || {}); } } catch {} }
+  function lsSave() { try { localStorage.setItem(LS, JSON.stringify({ workouts: state.workouts, active: state.active, settings: state.settings })); } catch {} }
+  const chains = {};
+  function put(docId, body) {
+    if (!base) { lsSave(); return; }
+    const run = () => (body === null ? base.doc(docId).delete() : base.doc(docId).set(body)).catch(e => setSync(e?.code === "quota_exceeded" ? "Storage is full. Delete some old workouts." : "Couldn't save. Check your connection."));
+    chains[docId] = (chains[docId] || Promise.resolve()).then(run);
+  }
+  let activeTimer = null, activeTouched = 0;
+  function saveActive(now) {
+    activeTouched = Date.now();
+    clearTimeout(activeTimer);
+    const go = () => put("active", state.active ? { w: state.active } : null);
+    if (now) go(); else activeTimer = setTimeout(go, 700);
+  }
+  const saveSettings = () => put("settings", state.settings);
+  function setSync(t) { $("sync").textContent = t; }
+
+  // ---------- metrics ----------
+  const e1rm = (w, r) => r <= 1 ? w : w * (1 + r / 30);
+  function setScore(kind, s) {
+    const a = num(s.a) || 0, b = num(s.b) || 0;
+    if (kind === "wr") return b > 0 && a > 0 ? e1rm(a, Math.min(b, 15)) : 0;
+    if (kind === "carry") return a;
+    return b; // bw reps, time seconds, cardio km
+  }
+  const METRIC = { wr: ["Est. 1RM", "kg"], bw: ["Most reps", "reps"], time: ["Longest", "sec"], cardio: ["Distance", "km"], carry: ["Heaviest", "kg"] };
+  function sessionScore(kind, sets) {
+    const done = sets.filter(s => s.done);
+    if (!done.length) return null;
+    if (kind === "cardio") return done.reduce((t, s) => t + (num(s.b) || 0), 0);
+    return Math.max(...done.map(s => setScore(kind, s)));
+  }
+  function setText(kind, s) {
+    const a = num(s.a), b = num(s.b);
+    if (kind === "wr") return `${fmtN(a, 2)}×${fmtN(b, 0)}`;
+    if (kind === "bw") return a ? `+${fmtN(a, 2)}×${fmtN(b, 0)}` : `${fmtN(b, 0)}`;
+    if (kind === "time") return `${fmtN(b, 0)}s${a ? ` +${fmtN(a, 2)}kg` : ""}`;
+    if (kind === "cardio") return `${fmtN(a, 0)} min${b ? ` · ${fmtN(b, 2)} km` : ""}`;
+    if (kind === "carry") return `${fmtN(a, 2)}kg × ${fmtN(b, 0)}m`;
+    return "";
+  }
+  function volume(w) {
+    let v = 0;
+    for (const e of w.ex) { const k = exInfo(e.id).kind; if (k === "wr" || k === "bw") for (const s of e.sets) if (s.done) v += (num(s.a) || 0) * (num(s.b) || 0); }
+    return v;
+  }
+  function doneSets(w) { return w.ex.reduce((t, e) => t + e.sets.filter(s => s.done).length, 0); }
+  function history(exId) {
+    // [{start, sets}] oldest first, finished workouts only
+    return finished().filter(w => w.ex.some(e => e.id === exId)).reverse()
+      .map(w => ({ start: w.start, wid: w.id, sets: w.ex.filter(e => e.id === exId).flatMap(e => e.sets.filter(s => s.done)) }))
+      .filter(h => h.sets.length);
+  }
+  function bestEver(exId, beforeStart) {
+    const k = exInfo(exId).kind; let best = 0;
+    for (const h of history(exId)) if (beforeStart == null || h.start < beforeStart) for (const s of h.sets) best = Math.max(best, setScore(k, s));
+    return best;
+  }
+  function prevSets(exId, beforeStart) {
+    const h = history(exId).filter(x => x.start < beforeStart);
+    return h.length ? h[h.length - 1].sets : [];
+  }
+
+  // ---------- tabs ----------
+  function showTab(t) {
+    state.tab = t;
+    for (const n of ["workout", "history", "progress"]) { $("t-" + n).setAttribute("aria-selected", n === t); $("v-" + n).hidden = n !== t; }
+    try { localStorage.setItem("ironlog-tab", t); } catch {}
+    render();
+    window.scrollTo(0, 0);
+  }
+  for (const n of ["workout", "history", "progress"]) $("t-" + n).onclick = () => { if (n !== "progress") state.detail = null; showTab(n); };
+
+  // ---------- render: workout ----------
+  function renderWorkout() {
+    const v = $("v-workout");
+    if (!state.active) {
+      const ws = finished(), wk = weekStart(Date.now());
+      const thisWeek = ws.filter(w => w.start >= wk);
+      const recent = ws.slice(0, 4);
+      v.innerHTML = `
+        <div class="stats">
+          <div class="stat"><span class="label">This week</span><b>${thisWeek.length}</b><span class="small muted">workouts</span></div>
+          <div class="stat"><span class="label">Volume</span><b>${fmtN(thisWeek.reduce((t, w) => t + volume(w), 0) / 1000, 1)}t</b><span class="small muted">this week</span></div>
+          <div class="stat"><span class="label">All time</span><b>${ws.length}</b><span class="small muted">workouts</span></div>
+        </div>
+        <button class="btn big" data-act="start">Start workout</button>
+        ${recent.length ? `<div class="card"><h2>Repeat a workout</h2><div class="quick">${recent.map(w => `
+          <button data-act="repeat" data-id="${w.id}"><span><b>${esc(w.name)}</b><span class="small muted">${dateShort(w.start)} · ${w.ex.map(e => esc(exInfo(e.id).name)).slice(0, 3).join(", ")}${w.ex.length > 3 ? ` +${w.ex.length - 3}` : ""}</span></span><span class="link">Start</span></button>`).join("")}</div></div>`
+          : `<div class="empty">Your workouts will show up here. Tap <b>Start workout</b>, add exercises from the library and log each set. Next time, the app shows what you lifted last session so you know what to beat.</div>`}`;
+      return;
+    }
+    const w = state.active;
+    let html = `<div class="wk-head"><input id="wkName" value="${esc(w.name)}" aria-label="Workout name"><span class="clock" id="wkClock">${clock((Date.now() - w.start) / 1000)}</span></div>`;
+    if (!w.ex.length) html += `<div class="empty">No exercises yet. Add some from the library below.</div>`;
+    w.ex.forEach((e, ei) => {
+      const info = exInfo(e.id), K = KINDS[info.kind], prev = prevSets(e.id, w.start);
+      html += `<div class="ex" data-ei="${ei}">
+        <div class="ex-top"><div><h3>${esc(info.name)}</h3><span class="small muted">${esc(info.muscle)} · ${EQUIP[info.equip] || ""}</span></div>
+          <div class="ex-menu"><button data-act="up" data-ei="${ei}" aria-label="Move up" ${ei ? "" : "disabled"}>↑</button><button data-act="rmex" data-ei="${ei}" aria-label="Remove exercise">×</button></div></div>
+        ${state.confirm === "ex" + ei ? `<div class="confirm" style="margin:0 14px 8px"><span>Remove ${esc(info.name)} and its sets?</span><button class="btn danger" data-act="rmex-yes" data-ei="${ei}">Remove</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
+        <table class="sets"><thead><tr><th>Set</th><th>Previous</th><th>${K.a}</th><th>${K.b}</th><th><span class="sr" aria-label="Done">✓</span></th></tr></thead><tbody>
+        ${e.sets.map((s, si) => {
+          const p = prev[si];
+          return `<tr class="${s.done ? "done" : ""}">
+            <td class="setno"><button data-act="rmset" data-ei="${ei}" data-si="${si}" aria-label="Delete set ${si + 1}" title="Tap to delete">${si + 1}</button></td>
+            <td class="prev">${p ? esc(setText(info.kind, p)) : "–"}${s.pr ? ' <span class="pr">PR</span>' : ""}</td>
+            <td><input id="in-${ei}-${si}-a" inputmode="decimal" data-ei="${ei}" data-si="${si}" data-f="a" value="${s.a ?? ""}" placeholder="${p ? esc(p.a ?? "") : ""}" aria-label="${K.a} set ${si + 1}"></td>
+            <td><input id="in-${ei}-${si}-b" inputmode="decimal" data-ei="${ei}" data-si="${si}" data-f="b" value="${s.b ?? ""}" placeholder="${p ? esc(p.b ?? "") : ""}" aria-label="${K.b} set ${si + 1}"></td>
+            <td><button class="tick" data-act="tick" data-ei="${ei}" data-si="${si}" aria-label="Mark set ${si + 1} done">✓</button></td></tr>`;
+        }).join("")}
+        </tbody></table>
+        <div class="ex-foot"><button class="link" data-act="addset" data-ei="${ei}">+ Add set</button><span class="small muted">${prev.length ? "Last: " + dateShort(history(e.id).filter(h => h.start < w.start).pop().start) : "First time"}</span></div>
+      </div>`;
+    });
+    html += `<button class="btn ghost" data-act="pick" style="padding:14px">+ Add exercises</button>`;
+    if (state.confirm === "discard") html += `<div class="confirm"><span>Discard this workout? Nothing from it will be saved.</span><button class="btn danger" data-act="discard-yes">Discard</button><button class="btn ghost" data-act="cancel">Keep going</button></div>`;
+    html += `<div class="row"><button class="btn done" data-act="finish" style="flex:2">Finish workout</button><button class="btn ghost" data-act="discard" style="flex:1">Discard</button></div>`;
+    v.innerHTML = html;
+  }
+
+  // ---------- render: history ----------
+  function renderHistory() {
+    const v = $("v-history"), ws = finished();
+    if (!ws.length) { v.innerHTML = `<div class="empty">No workouts yet. Finished workouts are listed here with every set, so you can look back or repeat one.</div>`; return; }
+    let html = "", lastMonth = "";
+    for (const w of ws) {
+      const m = new Date(w.start).toLocaleDateString("en-AU", { month: "long", year: "numeric" });
+      if (m !== lastMonth) { html += `<h2>${m}</h2>`; lastMonth = m; }
+      const prs = w.ex.reduce((t, e) => t + e.sets.filter(s => s.pr).length, 0);
+      const open = state.openHist === w.id;
+      html += `<div class="hcard"><button data-act="hist" data-id="${w.id}" aria-expanded="${open}"><div><h3>${esc(w.name)}</h3><div class="meta">${dateShort(w.start)} · ${dur((w.end || w.start) - w.start)} · ${doneSets(w)} sets · ${fmtN(volume(w), 0)} kg</div></div>${prs ? `<span class="pr">${prs} PR${prs > 1 ? "S" : ""}</span>` : ""}</button>`;
+      if (open) {
+        html += `<div class="hbody">${w.ex.map(e => { const i = exInfo(e.id); const d = e.sets.filter(s => s.done); return d.length ? `<div class="hline"><b>${esc(i.name)}</b><span class="num">${d.map(s => esc(setText(i.kind, s)) + (s.pr ? " ★" : "")).join(", ")}</span></div>` : ""; }).join("")}
+          ${state.confirm === "del" + w.id ? `<div class="confirm"><span>Delete this workout for good?</span><button class="btn danger" data-act="del-yes" data-id="${w.id}">Delete</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
+          <div class="row"><button class="btn" data-act="repeat" data-id="${w.id}">Repeat workout</button><button class="btn ghost" data-act="del" data-id="${w.id}">Delete</button></div></div>`;
+      }
+      html += `</div>`;
+    }
+    v.innerHTML = html;
+  }
+
+  // ---------- render: progress ----------
+  function renderProgress() {
+    const v = $("v-progress");
+    if (state.detail) return renderDetail(v, state.detail);
+    const ws = finished();
+    if (!ws.length) { v.innerHTML = `<div class="empty">Progress charts appear after your first workout: estimated one-rep max for each lift, personal records, and how many sets each muscle group gets per week.</div>`; return; }
+    // weekly sets per muscle
+    const wk = weekStart(Date.now());
+    const per = {}; for (const m of MUSCLES) per[m] = 0;
+    for (const w of ws.filter(w => w.start >= wk)) for (const e of w.ex) { const m = exInfo(e.id).muscle; per[m] = (per[m] || 0) + e.sets.filter(s => s.done).length; }
+    const musc = MUSCLES.filter(m => m !== "Cardio");
+    const maxSets = Math.max(20, ...musc.map(m => per[m]));
+    // workouts per week, last 8 weeks
+    const weeks = []; for (let i = 7; i >= 0; i--) { const s = weekStart(Date.now()) - i * 7 * 864e5; weeks.push({ s, n: ws.filter(w => w.start >= s && w.start < s + 7 * 864e5).length }); }
+    const maxW = Math.max(4, ...weeks.map(x => x.n));
+    // exercises done
+    const done = {}; for (const w of ws) for (const e of w.ex) if (e.sets.some(s => s.done)) { done[e.id] = done[e.id] || { last: 0, count: 0 }; done[e.id].last = Math.max(done[e.id].last, w.start); done[e.id].count++; }
+    const list = Object.keys(done).sort((a, b) => done[b].last - done[a].last);
+    const W = 320, H = 110, bw = (W - 20) / 8;
+    v.innerHTML = `
+      <div class="card"><h2>Workouts per week</h2><div class="chart"><svg viewBox="0 0 ${W} ${H + 20}" role="img" aria-label="Workouts per week, last 8 weeks">
+        ${weeks.map((x, i) => { const h = x.n / maxW * H; const X = 10 + i * bw; return `<rect x="${X + 4}" y="${H - h}" width="${bw - 8}" height="${Math.max(h, 1)}" rx="3" fill="${i === 7 ? "var(--accent)" : "var(--hair)"}"/>${x.n ? `<text x="${X + bw / 2}" y="${H - h - 4}" text-anchor="middle" font-size="11" font-family="Red Hat Mono, monospace" fill="var(--ink)">${x.n}</text>` : ""}<text x="${X + bw / 2}" y="${H + 15}" text-anchor="middle" font-size="9.5" fill="var(--muted)">${i === 7 ? "This wk" : new Date(x.s).toLocaleDateString("en-AU", { day: "numeric", month: "numeric" })}</text>`; }).join("")}
+      </svg></div></div>
+      <div class="card"><h2>Sets this week</h2><p class="small muted" style="margin:0">Roughly 10 to 20 hard sets per muscle per week is the usual target for building muscle.</p>
+        <div class="mus">${musc.map(m => `<span>${m}</span><span class="b"><span class="${per[m] >= 10 ? "hi" : ""}" style="width:${per[m] / maxSets * 100}%"></span></span><span class="num">${per[m]}</span>`).join("")}</div></div>
+      <div class="card"><h2>Your lifts</h2><input class="search" id="progSearch" type="search" placeholder="Filter your exercises" style="border-width:1px">
+        <div class="plp" id="progList">${list.map(id => { const i = exInfo(id), h = history(id), k = i.kind; const best = Math.max(...h.map(x => sessionScore(k, x.sets) || 0)); return `<button data-act="detail" data-id="${id}" data-name="${esc(norm(i.name))}"><span><b>${esc(i.name)}</b><span class="small muted">${done[id].count} session${done[id].count > 1 ? "s" : ""} · last ${dateShort(done[id].last)}</span></span><span class="num">${fmtN(best, k === "cardio" ? 2 : 1)} <span class="small muted">${METRIC[k][1]}</span></span></button>`; }).join("")}</div></div>`;
+    $("progSearch").oninput = e => { const q = norm(e.target.value); for (const b of $("progList").children) b.hidden = q && !b.dataset.name.includes(q); };
+  }
+
+  function renderDetail(v, id) {
+    const i = exInfo(id), k = i.kind, h = history(id), [mLabel, mUnit] = METRIC[k];
+    const pts = h.map(x => ({ t: x.start, v: sessionScore(k, x.sets) }));
+    const all = h.flatMap(x => x.sets);
+    const tiles = [];
+    if (k === "wr") {
+      tiles.push(["Best est. 1RM", fmtN(Math.max(...pts.map(p => p.v)), 1) + " kg"]);
+      tiles.push(["Heaviest set", fmtN(Math.max(...all.map(s => num(s.a) || 0)), 2) + " kg"]);
+      tiles.push(["Most reps", fmtN(Math.max(...all.map(s => num(s.b) || 0)), 0)]);
+      tiles.push(["Total volume", fmtN(all.reduce((t, s) => t + (num(s.a) || 0) * (num(s.b) || 0), 0) / 1000, 1) + " t"]);
+    } else {
+      tiles.push([mLabel, fmtN(Math.max(...pts.map(p => p.v)), 2) + " " + mUnit]);
+      tiles.push(["Sessions", String(h.length)]);
+    }
+    // rep-range bests for weighted lifts
+    let repTable = "";
+    if (k === "wr") {
+      const best = {};
+      for (const s of all) { const r = num(s.b), a = num(s.a); if (r >= 1 && r <= 12 && a) best[r] = Math.max(best[r] || 0, a); }
+      const reps = [1, 3, 5, 8, 10, 12].filter(r => best[r]);
+      if (reps.length) repTable = `<div class="card"><h2>Best weight by reps</h2><div class="prgrid">${reps.map(r => `<div class="stat"><span class="label">${r} rep${r > 1 ? "s" : ""}</span><b>${fmtN(best[r], 2)} kg</b></div>`).join("")}</div></div>`;
+    }
+    v.innerHTML = `
+      <button class="link" data-act="back" style="align-self:flex-start">‹ All lifts</button>
+      <div><h2 style="font-size:1.8rem">${esc(i.name)}</h2><span class="muted">${esc(i.muscle)} · ${EQUIP[i.equip] || ""}</span></div>
+      <div class="prgrid">${tiles.map(([l, val]) => `<div class="stat"><span class="label">${l}</span><b>${val}</b></div>`).join("")}</div>
+      <div class="card"><h2>${mLabel} over time</h2>${lineChart(pts, mUnit)}${k === "wr" ? `<p class="small muted" style="margin:0">Estimated 1RM uses the Epley formula on your best set each session: weight × (1 + reps ÷ 30). It lets you compare a set of 8 with a set of 5.</p>` : ""}</div>
+      ${repTable}
+      <div class="card"><h2>Sessions</h2>${h.slice().reverse().map(x => `<div class="hline"><b>${dateShort(x.start)}</b><span class="num">${x.sets.map(s => esc(setText(k, s)) + (s.pr ? " ★" : "")).join(", ")}</span></div>`).join("")}</div>`;
+  }
+
+  function lineChart(pts, unit) {
+    if (pts.length < 2) return `<p class="small muted" style="margin:0">Log this exercise in one more session to see a trend line.</p>`;
+    const W = 340, H = 160, L = 40, R = 12, T = 14, B = 22;
+    const vs = pts.map(p => p.v), lo0 = Math.min(...vs), hi0 = Math.max(...vs), pad = Math.max((hi0 - lo0) * 0.15, hi0 * 0.03, 1);
+    const lo = Math.max(0, lo0 - pad), hi = hi0 + pad;
+    const t0 = pts[0].t, t1 = pts[pts.length - 1].t, span = Math.max(1, t1 - t0);
+    const x = t => L + (t - t0) / span * (W - L - R), y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+    const line = pts.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
+    const area = `${line}L${x(t1).toFixed(1)},${H - B}L${x(t0).toFixed(1)},${H - B}Z`;
+    const ticks = [lo, (lo + hi) / 2, hi];
+    const last = pts[pts.length - 1], first = pts[0];
+    const d = t => new Date(t).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+    return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Trend from ${fmtN(first.v)} to ${fmtN(last.v)} ${unit}">
+      ${ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hair)"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="10" font-family="Red Hat Mono, monospace" fill="var(--muted)">${fmtN(v, 0)}</text>`).join("")}
+      <path d="${area}" fill="var(--accent)" opacity="0.12"/>
+      <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${pts.map(p => `<circle cx="${x(p.t)}" cy="${y(p.v)}" r="2.5" fill="var(--accent)"/>`).join("")}
+      <circle cx="${x(last.t)}" cy="${y(last.v)}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+      <text x="${L}" y="${H - 5}" font-size="10" fill="var(--muted)">${d(t0)}</text>
+      <text x="${W - R}" y="${H - 5}" text-anchor="end" font-size="10" fill="var(--muted)">${d(t1)}</text>
+    </svg><div class="small muted">${fmtN(first.v)} → <b style="color:var(--ink)">${fmtN(last.v)} ${unit}</b> (${last.v >= first.v ? "+" : ""}${fmtN(last.v - first.v)})</div></div>`;
+  }
+
+  function render() {
+    if (state.tab === "workout") renderWorkout();
+    else if (state.tab === "history") renderHistory();
+    else renderProgress();
+  }
+
+  // ---------- workout actions ----------
+  function newWorkout(fromId) {
+    const now = Date.now();
+    const src = fromId && state.workouts[fromId];
+    state.active = {
+      id: "w-" + now, start: now, name: src ? src.name : dayName(now) + " workout",
+      ex: src ? src.ex.map(e => ({ id: e.id, sets: e.sets.filter(s => s.done).map(() => ({ a: "", b: "" })) })).filter(e => e.sets.length) : []
+    };
+    state.confirm = null; saveActive(true); showTab("workout");
+    if (!src) openPicker();
+  }
+  function prefill(e, si) {
+    // copy values from the previous set in this workout, else from last session's same set
+    const s = e.sets[si];
+    const prior = e.sets[si - 1];
+    const p = prevSets(e.id, state.active.start)[si];
+    for (const f of ["a", "b"]) if (s[f] === "" || s[f] == null) s[f] = (prior && prior[f] !== "" ? prior[f] : p ? p[f] : "") ?? "";
+  }
+  function finishWorkout() {
+    const w = state.active; if (!w) return;
+    w.ex = w.ex.map(e => ({ id: e.id, sets: e.sets.filter(s => s.done) })).filter(e => e.sets.length);
+    if (!w.ex.length) { state.confirm = "discard"; render(); toast("No completed sets to save. Tick sets with ✓ as you finish them."); return; }
+    w.end = Date.now();
+    state.workouts[w.id] = w; put(w.id, w);
+    const prs = w.ex.reduce((t, e) => t + e.sets.filter(s => s.pr).length, 0);
+    state.active = null; saveActive(true); stopRest();
+    state.openHist = w.id; showTab("history");
+    toast(`Saved. ${doneSets(w)} sets, ${fmtN(volume(w), 0)} kg${prs ? `, ${prs} PR${prs > 1 ? "s" : ""}!` : ""}`);
+  }
+
+  document.addEventListener("input", e => {
+    const t = e.target;
+    if (t.id === "wkName" && state.active) { state.active.name = t.value; saveActive(); return; }
+    if (t.dataset.f && state.active) {
+      const s = state.active.ex[+t.dataset.ei]?.sets[+t.dataset.si]; if (!s) return;
+      s[t.dataset.f] = t.value.replace(",", ".");
+      saveActive();
+    }
+  });
+
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const act = b.dataset.act, ei = +b.dataset.ei, si = +b.dataset.si, w = state.active;
+    switch (act) {
+      case "start": newWorkout(); break;
+      case "repeat": newWorkout(b.dataset.id); break;
+      case "pick": openPicker(); break;
+      case "addset": { const ex = w.ex[ei]; ex.sets.push({ a: "", b: "" }); prefill(ex, ex.sets.length - 1); saveActive(); renderWorkout(); document.getElementById(`in-${ei}-${ex.sets.length - 1}-a`)?.focus(); break; }
+      case "rmset": w.ex[ei].sets.splice(si, 1); saveActive(); renderWorkout(); break;
+      case "tick": {
+        const ex = w.ex[ei], s = ex.sets[si], k = exInfo(ex.id).kind;
+        if (!s.done) {
+          prefill(ex, si);
+          if (!(num(s.b) > 0) && !(k === "cardio" && num(s.a) > 0)) { toast(`Enter ${KINDS[k].b} first`); document.getElementById(`in-${ei}-${si}-b`)?.focus(); break; }
+          s.done = true;
+          const sc = setScore(k, s), prevBest = bestEver(ex.id, w.start);
+          const inWorkout = ex.sets.filter((x, j) => j !== si && x.done).map(x => setScore(k, x));
+          s.pr = prevBest > 0 && sc > prevBest && sc > Math.max(0, ...inWorkout);
+          if (s.pr) toast(`New PR on ${exInfo(ex.id).name}!`);
+          if (k !== "cardio") startRest();
+          if (si === ex.sets.length - 1 && k !== "cardio") { ex.sets.push({ a: "", b: "" }); prefill(ex, si + 1); }
+        } else { s.done = false; s.pr = false; }
+        saveActive(); renderWorkout(); break;
+      }
+      case "up": if (ei > 0) { [w.ex[ei - 1], w.ex[ei]] = [w.ex[ei], w.ex[ei - 1]]; saveActive(); renderWorkout(); } break;
+      case "rmex": state.confirm = "ex" + ei; renderWorkout(); break;
+      case "rmex-yes": w.ex.splice(ei, 1); state.confirm = null; saveActive(); renderWorkout(); break;
+      case "cancel": state.confirm = null; render(); break;
+      case "finish": finishWorkout(); break;
+      case "discard": state.confirm = "discard"; renderWorkout(); break;
+      case "discard-yes": state.active = null; state.confirm = null; saveActive(true); stopRest(); renderWorkout(); break;
+      case "hist": state.openHist = state.openHist === b.dataset.id ? null : b.dataset.id; state.confirm = null; renderHistory(); break;
+      case "del": state.confirm = "del" + b.dataset.id; renderHistory(); break;
+      case "del-yes": delete state.workouts[b.dataset.id]; put(b.dataset.id, null); state.confirm = null; renderHistory(); toast("Workout deleted"); break;
+      case "detail": state.detail = b.dataset.id; renderProgress(); window.scrollTo(0, 0); break;
+      case "back": state.detail = null; renderProgress(); break;
+    }
+  });
+
+  // ---------- rest timer ----------
+  let rest = null, restTick = null;
+  function startRest() { rest = { end: Date.now() + state.settings.rest * 1000, total: state.settings.rest }; $("rest").hidden = false; clearInterval(restTick); restTick = setInterval(drawRest, 250); drawRest(); }
+  function stopRest() { rest = null; clearInterval(restTick); $("rest").hidden = true; }
+  function drawRest() {
+    if (!rest) return;
+    const left = (rest.end - Date.now()) / 1000;
+    $("rest").classList.toggle("over", left < 0);
+    $("restT").innerHTML = `<small>${left < 0 ? "Rest over" : "Rest"}</small>${left < 0 ? "+" : ""}${clock(Math.abs(Math.ceil(left)))}`;
+    $("restBar").style.width = Math.max(0, Math.min(100, left / rest.total * 100)) + "%";
+    if (left < -120) stopRest();
+  }
+  function adjustRest(d) {
+    if (!rest) return;
+    rest.end += d * 1000; rest.total = Math.max(15, rest.total + d);
+    state.settings.rest = Math.max(15, Math.min(600, state.settings.rest + d)); saveSettings(); drawRest();
+  }
+  $("restMinus").onclick = () => adjustRest(-15);
+  $("restPlus").onclick = () => adjustRest(15);
+  $("restSkip").onclick = stopRest;
+
+  // ---------- picker ----------
+  function openPicker() {
+    state.pick = { q: "", muscle: null, equip: null, sel: [], custom: false };
+    $("picker").hidden = false; document.body.style.overflow = "hidden";
+    $("pickSearch").value = ""; renderPicker();
+    setTimeout(() => $("pickSearch").focus(), 50);
+  }
+  function closePicker() { state.pick = null; $("picker").hidden = true; document.body.style.overflow = ""; }
+  $("pickClose").onclick = closePicker;
+  $("pickSearch").oninput = e => { state.pick.q = e.target.value; state.pick.custom = false; renderPickList(); };
+  $("pickAdd").onclick = () => {
+    const w = state.active; if (!w) return;
+    for (const id of state.pick.sel) {
+      const ex = { id, sets: [] };
+      const p = prevSets(id, w.start);
+      const n = Math.max(1, Math.min(p.length || 3, 8));
+      for (let i = 0; i < n; i++) ex.sets.push({ a: p[i]?.a ?? "", b: "" });
+      w.ex.push(ex);
+    }
+    saveActive(); closePicker(); renderWorkout();
+  };
+  $("pickCustom").onclick = () => { state.pick.custom = true; renderPickList(); };
+
+  function chip(label, pressed, attr) { return `<button class="chip" aria-pressed="${pressed}" ${attr}>${esc(label)}</button>`; }
+  function renderPicker() {
+    const p = state.pick;
+    $("pickMuscles").innerHTML = chip("All muscles", !p.muscle, 'data-pm=""') + MUSCLES.map(m => chip(m, p.muscle === m, `data-pm="${esc(m)}"`)).join("");
+    $("pickEquip").innerHTML = chip("Any equipment", !p.equip, 'data-pe=""') + Object.entries(EQUIP).map(([k, n]) => chip(n, p.equip === k, `data-pe="${k}"`)).join("");
+    renderPickList();
+  }
+  $("pickMuscles").onclick = e => { const c = e.target.closest("[data-pm]"); if (!c) return; state.pick.muscle = c.dataset.pm || null; renderPicker(); };
+  $("pickEquip").onclick = e => { const c = e.target.closest("[data-pe]"); if (!c) return; state.pick.equip = c.dataset.pe || null; renderPicker(); };
+
+  function matches(ex, q) {
+    if (!q) return true;
+    const hay = norm(`${ex.name} ${ex.muscle} ${EQUIP[ex.equip] || ""}`);
+    return q.split(" ").every(tok => hay.includes(ALIASES[tok] || tok) || hay.replace(/ /g, "").includes(tok));
+  }
+  function renderPickList() {
+    const p = state.pick, list = $("pickList");
+    const sel = new Set(p.sel);
+    $("pickAdd").disabled = !p.sel.length;
+    $("pickAdd").textContent = p.sel.length ? `Add ${p.sel.length}` : "Add";
+    if (p.custom) {
+      list.innerHTML = `<h4>New exercise</h4><div class="form">
+        <label class="wide">Name<input id="cName" value="${esc(p.q)}" placeholder="e.g. Viking Press"></label>
+        <label>Muscle<select id="cMuscle">${MUSCLES.map(m => `<option ${m === p.muscle ? "selected" : ""}>${m}</option>`).join("")}</select></label>
+        <label>Equipment<select id="cEquip">${Object.entries(EQUIP).map(([k, n]) => `<option value="${k}" ${k === p.equip ? "selected" : ""}>${n}</option>`).join("")}</select></label>
+        <label class="wide">Tracked as<select id="cKind"><option value="wr">Weight × reps</option><option value="bw">Bodyweight reps (+ optional weight)</option><option value="time">Time (seconds)</option><option value="carry">Weight × distance</option><option value="cardio">Cardio (minutes, km)</option></select></label>
+        <button class="btn wide" id="cSave" style="grid-column:1/-1">Save and select</button></div>`;
+      $("cSave").onclick = () => {
+        const name = $("cName").value.trim(); if (!name) { $("cName").focus(); return; }
+        const id = "c-" + slug(name) + "-" + Date.now().toString(36);
+        state.settings.custom = (state.settings.custom || []).concat({ id, name, muscle: $("cMuscle").value, equip: $("cEquip").value, kind: $("cKind").value });
+        saveSettings(); p.sel.push(id); p.custom = false; p.q = ""; $("pickSearch").value = ""; renderPickList();
+      };
+      return;
+    }
+    const q = norm(p.q);
+    const filtered = allEx().filter(x => (!p.muscle || x.muscle === p.muscle) && (!p.equip || x.equip === p.equip) && matches(x, q));
+    const used = {}; for (const w of finished()) for (const e of w.ex) used[e.id] = Math.max(used[e.id] || 0, w.start);
+    const row = x => `<button class="prow" data-pid="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="nm"><b>${esc(x.name)}${x.id.startsWith("c-") ? ' <span class="small muted">(custom)</span>' : ""}</b><span>${esc(x.muscle)} · ${EQUIP[x.equip] || ""}${used[x.id] ? " · last " + dateShort(used[x.id]) : ""}</span></span><span class="box">${sel.has(x.id) ? p.sel.indexOf(x.id) + 1 : ""}</span></button>`;
+    let html = "";
+    if (!filtered.length) html = `<div class="empty" style="margin-top:12px">No match for "${esc(p.q)}". <button class="link" id="emptyCustom">Create it as a custom exercise</button></div>`;
+    else if (!q && !p.muscle && !p.equip) {
+      const recent = filtered.filter(x => used[x.id]).sort((a, b) => used[b.id] - used[a.id]).slice(0, 10);
+      if (recent.length) html += `<h4>Recently used</h4>` + recent.map(row).join("");
+      for (const m of MUSCLES) { const g = filtered.filter(x => x.muscle === m); if (g.length) html += `<h4>${m} · ${g.length}</h4>` + g.map(row).join(""); }
+    } else {
+      filtered.sort((a, b) => (used[b.id] || 0) - (used[a.id] || 0) || a.name.localeCompare(b.name));
+      html = `<h4>${filtered.length} exercise${filtered.length > 1 ? "s" : ""}</h4>` + filtered.map(row).join("");
+    }
+    list.innerHTML = html;
+    $("emptyCustom")?.addEventListener("click", () => { p.custom = true; renderPickList(); });
+  }
+  $("pickList").addEventListener("click", e => {
+    const r = e.target.closest("[data-pid]"); if (!r) return;
+    const p = state.pick, id = r.dataset.pid, i = p.sel.indexOf(id);
+    if (i >= 0) p.sel.splice(i, 1); else p.sel.push(id);
+    renderPickList();
+  });
+
+  // ---------- clock ----------
+  setInterval(() => { const c = $("wkClock"); if (c && state.active) c.textContent = clock((Date.now() - state.active.start) / 1000); }, 1000);
+
+  // ---------- boot ----------
+  try { const t = localStorage.getItem("ironlog-tab"); if (t === "history" || t === "progress") state.tab = t; } catch {}
+  showTab(state.tab);
+
+  (async () => {
+    const C = window.claude;
+    const [dbNs, userNs] = await Promise.all([C?.use("db"), C?.use("user")].map(p => Promise.resolve(p).catch(() => null)));
+    const id = userNs ? await userNs.id().catch(() => null) : null;
+    if (dbNs && id) {
+      base = dbNs.collection("data/users/" + id);
+      setSync("Saved to your Claude account. Private to you.");
+      let first = true;
+      base.onSnapshot(snap => {
+        const ws = {};
+        let active = null;
+        for (const d of snap.docs) {
+          const body = d.data();
+          if (d.id === "settings") { if (!d.metadata.hasPendingWrites) Object.assign(state.settings, body); }
+          else if (d.id === "active") active = body.w || null;
+          else if (d.id.startsWith("w-")) ws[d.id] = body;
+        }
+        state.workouts = ws;
+        // Take the in-progress workout from the store on first load, or when this device isn't mid-edit.
+        if (first || (!state.active && active) || (Date.now() - activeTouched > 5000 && !snap.metadata.hasPendingWrites)) state.active = active;
+        first = false;
+        if (!state.pick && !document.activeElement?.dataset?.f && document.activeElement?.id !== "wkName") render();
+      }, () => setSync("Lost connection to your saved data. Reload to reconnect."));
+    } else {
+      lsLoad(); render();
+      setSync("Not signed in, so workouts are only kept in this browser.");
+    }
+  })();
+})();
+</script>
