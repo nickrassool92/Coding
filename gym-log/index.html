@@ -19,6 +19,7 @@
   --pr: #D42A2A;          /* red 25 kg plate */
   --pr-soft: #FBE1E1;
   --warm: #E3A500;        /* yellow 15 kg plate */
+  --scrim: rgba(20, 23, 28, 0.55);
   --display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
   --body: "Barlow", "Segoe UI", system-ui, sans-serif;
   --mono: "Red Hat Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -26,16 +27,17 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0F1114; --surface: #181B20; --ink: #E8EBEF; --muted: #98A0AC; --hair: #2B3038; --chalk: #1E2228;
-    --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E;
+    --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E; --scrim: rgba(0, 0, 0, 0.7);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0F1114; --surface: #181B20; --ink: #E8EBEF; --muted: #98A0AC; --hair: #2B3038; --chalk: #1E2228;
-  --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E;
+  --accent: #6E93FF; --accent-ink: #0B0D10; --done: #4CC27F; --done-soft: #16301F; --pr: #FF6B6B; --pr-soft: #3A1B1B; --warm: #F2C14E; --scrim: rgba(0, 0, 0, 0.7);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.4;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
@@ -173,6 +175,35 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
 .serv { display: flex; align-items: center; gap: 6px; }
 .serv button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--hair); background: var(--chalk); font-weight: 700; }
 .serv .num { min-width: 4.2em; text-align: center; font-weight: 700; font-size: 0.85rem; }
+.prow-w { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--hair); }
+.prow-w .prow { border-bottom: 0; }
+.info { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--hair); background: var(--surface); font-weight: 800; color: var(--muted); flex: none; }
+.demo { position: fixed; inset: 0; z-index: 50; background: var(--scrim); display: flex; align-items: center; justify-content: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dcard { background: var(--surface); border-radius: 14px; padding: 16px; width: 100%; max-width: 420px; max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.dcard .ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.dcard h2 { overflow-wrap: anywhere; min-width: 0; }
+.dfig { width: 100%; max-width: 100%; height: auto; aspect-ratio: 220 / 218; background: var(--chalk); border-radius: 10px; display: block; }
+.cues { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.dcard a.btn { text-align: center; text-decoration: none; }
+.dm-body { stroke: var(--ink); stroke-width: 7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.dm-far { stroke: var(--muted); stroke-width: 6; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.45; }
+.dm-torso { stroke: var(--ink); stroke-width: 10; stroke-linecap: round; }
+.dm-head { fill: var(--ink); }
+.dm-ground { stroke: var(--hair); stroke-width: 3; }
+.dm-prop { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.dm-thick { stroke: var(--muted); stroke-width: 6; stroke-linecap: round; }
+.dm-thin { stroke: var(--muted); stroke-width: 2; }
+.dm-w { fill: var(--accent); }
+.dm-hub { fill: var(--chalk); }
+.dm-bar { stroke: var(--ink); stroke-width: 3; }
+.dm-c { stroke: var(--muted); stroke-width: 1.5; }
+.dm-band { stroke: var(--warm); stroke-width: 2; stroke-dasharray: 4 3; }
+.dm-pad { fill: var(--muted); }
+.dm-sled { stroke: var(--muted); stroke-width: 6; stroke-linecap: round; }
+.dm-wheel { fill: none; stroke: var(--ink); stroke-width: 3; }
+.dm-rope { fill: none; stroke: var(--muted); stroke-width: 3; }
+.dm-ghost { opacity: 0.22; }
 .empty { padding: 20px; border: 2px dashed var(--hair); border-radius: 12px; text-align: center; color: var(--muted); }
 .sync { font-size: 0.8rem; color: var(--muted); text-align: center; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(90px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; max-width: calc(100% - 32px); }
@@ -221,6 +252,391 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
 </div>
 
 <div class="toast" id="toast" hidden></div>
+
+<div class="demo" id="demo" hidden role="dialog" aria-modal="true" aria-labelledby="demoTitle">
+  <div class="dcard">
+    <div class="ph"><div><h2 id="demoTitle">Exercise</h2><span class="small muted" id="demoMeta"></span></div><button class="link" id="demoClose">Close</button></div>
+    <svg id="demoSvg" class="dfig" role="img" aria-label="Animated demonstration"></svg>
+    <ol class="cues" id="demoCues"></ol>
+    <a class="btn ghost" id="demoVideo" href="https://www.youtube.com" target="_blank" rel="noopener">Watch a video demo</a>
+    <p class="small muted" style="margin:0">The figure shows the basic movement. Check the video for the exact setup on your gym's equipment.</p>
+  </div>
+</div>
+
+<script>
+// Iron Log form demos: stick-figure animations built from keyframes.
+// Figures face right in side view; "mirror" patterns are front view with both sides drawn.
+// Each keyframe places the hip, shoulder (or torso angle t), hands and feet; elbows and knees come from two-bone IK.
+window.IronDemo = (() => {
+  const L = { T: 48, TH: 40, SH: 40, UA: 28, FA: 26 };
+  const GROUND = 185;
+  const rad = a => a * Math.PI / 180;
+  const add = (p, q) => [p[0] + q[0], p[1] + q[1]];
+  const vec = (a, l) => [l * Math.sin(rad(a)), l * Math.cos(rad(a))];
+
+  function ik(a, c, l1, l2, s) {
+    const dx = c[0] - a[0], dy = c[1] - a[1], d = Math.hypot(dx, dy) || 0.001;
+    const dc = Math.min(Math.max(d, Math.abs(l1 - l2) + 0.5), l1 + l2 - 0.01);
+    const ux = dx / d, uy = dy / d;
+    const x = (l1 * l1 - l2 * l2 + dc * dc) / (2 * dc), h = Math.sqrt(Math.max(0, l1 * l1 - x * x));
+    return [[a[0] + ux * x + s * h * uy, a[1] + uy * x - s * h * ux], [a[0] + ux * dc, a[1] + uy * dc]];
+  }
+
+  // shared poses
+  const ST = { hip: [110, 106], t: 180, foot: [114, 185] };
+  const st = o => Object.assign({}, ST, o);
+  const LIE = { hip: [124, 134], sh: [76, 134], foot: [164, 185] };
+  const lie = o => Object.assign({}, LIE, o);
+  const BENCH = [["rect", 36, 140, 118, 8], ["line", 48, 148, 48, 185], ["line", 142, 148, 142, 185]];
+  const DL_LOW = { hip: [86, 135], t: 128, hr: [0, 54], foot: [114, 185] };
+  const PUSH_TOP = { hip: [88, 150], sh: [132, 128], hand: [134, 183], foot: [20, 183] };
+  const CROUCH = { hip: [96, 152], sh: [130, 124], hand: [134, 183], foot: [114, 185] };
+
+  const D = {
+    squat: { hold: "shoulder", f: [st({ t: 174, hr: [-8, 3] }), { hip: [80, 150], t: 142, hr: [-8, 3], foot: [114, 185] }],
+      cues: ["Brace your core and keep the bar over mid-foot.", "Sit your hips back and down until your thighs are at least parallel.", "Knees track over your toes. Drive up through the whole foot."] },
+    squat_front: { e: -1, f: [st({ t: 176, hr: [14, 10] }), { hip: [82, 150], t: 152, hr: [14, 12], foot: [114, 185] }],
+      cues: ["Hold the weight high on your chest, elbows down.", "Stay tall and sit straight down between your heels.", "Push your knees out and stand up without leaning forward."] },
+    squat_oh: { f: [st({ t: 176, hr: [2, -54] }), { hip: [82, 150], t: 155, hr: [6, -54], foot: [114, 185] }],
+      cues: ["Lock the bar out overhead with a wide grip.", "Keep the bar over your mid-foot as you sit down.", "Stay upright. Only go as deep as you can keep your arms locked."] },
+    deadlift: { f: [DL_LOW, st({ t: 178, hr: [2, 54] })],
+      cues: ["Bar over mid-foot, shins close to the bar.", "Flat back, chest up, take the slack out of the bar before you pull.", "Push the floor away and lock out with your glutes. Don't lean back."] },
+    rdl: { f: [st({ t: 178, hr: [2, 54] }), { hip: [84, 112], t: 105, hr: [0, 54], foot: [114, 185] }],
+      cues: ["Soft knees, then push your hips straight back.", "Keep the weight close, sliding down your thighs.", "Stop when you feel a strong hamstring stretch, then drive your hips forward."] },
+    goodmorning: { hold: "shoulder", f: [st({ t: 178, hr: [-8, 3] }), { hip: [86, 110], t: 100, hr: [-6, 6], foot: [114, 185] }],
+      cues: ["Bar on your upper back, knees slightly bent.", "Hinge at the hips with a flat back until your torso is near parallel.", "Squeeze your glutes to come back up."] },
+    hip_thrust: { hold: "hip", props: [["rect", 18, 140, 54, 45]],
+      f: [{ hip: [98, 168], sh: [64, 138], hand: [98, 164], foot: [146, 185] }, { hip: [110, 138], sh: [64, 136], hand: [110, 134], foot: [146, 185] }],
+      cues: ["Upper back on the bench edge, feet flat and shoulder width.", "Tuck your chin and drive through your heels.", "Lock out with hips level, shins vertical. Pause and squeeze."] },
+    glute_bridge: { hold: "hip", f: [{ hip: [96, 180], sh: [48, 178], hand: [96, 176], foot: [140, 185] }, { hip: [100, 150], sh: [48, 176], hand: [100, 146], foot: [140, 185] }],
+      cues: ["Lie on your back with heels close to your glutes.", "Press through your heels and lift your hips.", "Squeeze your glutes at the top without arching your lower back."] },
+    glute_kick: { hold: "none", k2: 1, f: [st({ t: 160, hand: [154, 98], foot2: [108, 185] }), st({ t: 160, hand: [154, 98], foot2: [42, 150] })],
+      cues: ["Brace on the machine or a support with a slight forward lean.", "Kick the working leg back by squeezing your glute.", "Don't arch your lower back to get extra range."] },
+    lunge: { k2: 1, f: [{ hip: [112, 110], t: 180, hr: [2, 54], foot: [140, 185], foot2: [82, 185] }, { hip: [108, 146], t: 178, hr: [2, 54], foot: [140, 185], foot2: [82, 185] }],
+      cues: ["Take a long enough stride that your front shin stays fairly vertical.", "Drop your back knee straight down towards the floor.", "Push through the front heel to stand back up."] },
+    stepup: { k2: 1, props: [["rect", 128, 150, 62, 35]],
+      f: [{ hip: [112, 112], t: 178, hr: [2, 54], foot: [146, 150], foot2: [100, 185] }, { hip: [140, 72], t: 178, hr: [2, 54], foot: [146, 150], foot2: [126, 148] }],
+      cues: ["Whole foot on the box.", "Drive up through the top leg. Don't push off the bottom foot.", "Lower slowly under control."] },
+    leg_press: { hold: "foot", gear: "sled", props: [["thick", 34, 104, 74, 152], ["thick", 74, 152, 104, 152]],
+      f: [{ hip: [78, 148], sh: [44, 108], hand: [72, 152], foot: [148, 96] }, { hip: [78, 148], sh: [44, 108], hand: [72, 152], foot: [118, 120] }],
+      cues: ["Back and hips flat against the pad.", "Lower until your knees are around 90 degrees without your lower back lifting.", "Press through your heels. Don't lock your knees hard at the top."] },
+    leg_ext: { hold: "foot", gear: "pad", props: [["rect", 62, 132, 52, 10], ["thick", 62, 132, 58, 80]],
+      f: [{ hip: [86, 128], sh: [80, 80], hand: [98, 136], foot: [130, 170] }, { hip: [86, 128], sh: [80, 80], hand: [98, 136], foot: [166, 124] }],
+      cues: ["Line the knee joint up with the machine's pivot.", "Straighten your legs fully and squeeze your quads.", "Lower slowly. Don't let the stack crash."] },
+    leg_curl: { hold: "foot", gear: "pad", props: [["rect", 40, 140, 112, 8]],
+      f: [{ hip: [86, 134], sh: [134, 132], hand: [160, 142], foot: [8, 130] }, { hip: [86, 134], sh: [134, 132], hand: [160, 142], foot: [62, 94] }],
+      cues: ["Hips pressed down into the pad.", "Curl your heels towards your glutes.", "Control the way down. Don't let your hips lift."] },
+    nordic: { hold: "none", props: [["rect", 44, 172, 24, 10]],
+      f: [{ hip: [100, 143], sh: [100, 95], hand: [114, 118], foot: [60, 183] }, { hip: [130, 158], sh: [166, 128], hand: [178, 150], foot: [60, 183] }],
+      cues: ["Kneel with your ankles anchored.", "Keep a straight line from knees to head.", "Lower as slowly as you can, catch yourself, push back up."] },
+    calf_raise: { f: [st({ hr: [2, 54], toe: [128, 185] }), { hip: [110, 96], t: 180, hr: [2, 54], foot: [114, 175], toe: [128, 185] }],
+      cues: ["Balls of the feet on the edge, heels free.", "Rise as high as you can and pause.", "Lower all the way for a full stretch."] },
+    bench: { e: -1, props: BENCH, f: [lie({ hand: [78, 82] }), lie({ hand: [82, 118] })],
+      cues: ["Shoulder blades squeezed together, feet planted.", "Lower to your mid-chest with elbows about 45 degrees from your body.", "Press up and slightly back over your shoulders."] },
+    incline: { e: -1, props: [["thick", 154, 156, 60, 104], ["line", 140, 152, 140, 185]],
+      f: [{ hip: [124, 150], sh: [86, 120], hand: [100, 68], foot: [166, 185] }, { hip: [124, 150], sh: [86, 120], hand: [98, 104], foot: [166, 185] }],
+      cues: ["Bench at about 30 degrees.", "Lower to your upper chest.", "Press up over your shoulders, keeping your shoulder blades back."] },
+    pullover_lying: { e: -1, props: BENCH, f: [lie({ hand: [78, 82] }), lie({ hand: [28, 124] })],
+      cues: ["Hold the weight over your chest with a slight elbow bend.", "Lower it behind your head in an arc until you feel a stretch.", "Pull it back over your chest using your lats and chest."] },
+    fly: { mirror: true, e: -1, anchor: [214, 60], f: [st({ hand: [160, 66] }), st({ hand: [116, 84] })],
+      cues: ["Slight bend in the elbows, and keep it fixed.", "Open wide until you feel a stretch across your chest.", "Bring your hands together in a hugging arc."] },
+    press_seated: { e: -1, props: [["thick", 70, 88, 80, 150], ["thick", 70, 150, 122, 150]], anchor: [214, 98],
+      f: [{ hip: [88, 146], sh: [86, 98], hand: [110, 98], foot: [136, 185] }, { hip: [88, 146], sh: [86, 98], hand: [140, 100], foot: [136, 185] }],
+      cues: ["Handles at mid-chest height, back against the pad.", "Press forward until your arms are straight.", "Return slowly until you feel a chest stretch."] },
+    pushup: { e: -1, f: [PUSH_TOP, { hip: [92, 166], sh: [136, 160], hand: [134, 183], foot: [20, 183] }],
+      cues: ["Hands just wider than your shoulders, body in a straight line.", "Lower your chest to the floor, elbows about 45 degrees out.", "Squeeze your glutes so your hips don't sag."] },
+    pike: { e: -1, f: [{ hip: [92, 96], sh: [124, 132], hand: [130, 183], foot: [46, 180] }, { hip: [94, 100], sh: [138, 160], hand: [130, 183], foot: [46, 180] }],
+      cues: ["Hips high, so your body makes an upside-down V.", "Lower the top of your head towards the floor in front of your hands.", "Press back up through your shoulders."] },
+    dip: { e: -1, ground: false, props: [["thick", 100, 112, 150, 112]],
+      f: [{ hip: [106, 104], sh: [114, 58], hand: [118, 112], foot: [82, 168] }, { hip: [100, 130], sh: [112, 86], hand: [118, 112], foot: [76, 192] }],
+      cues: ["Start locked out with your shoulders down.", "Lower until your upper arms are about parallel to the floor.", "Lean forward for chest, stay upright for triceps."] },
+    ohp: { e: -1, f: [st({ hr: [12, 4] }), st({ hr: [3, -53] })],
+      cues: ["Squeeze your glutes and brace so you don't lean back.", "Press straight up, moving your head back out of the way.", "Finish with the weight over your mid-foot, head through."] },
+    landmine: { e: -1, f: [st({ hr: [14, 8] }), st({ hr: [40, -36] })],
+      cues: ["Hold the end of the bar at your shoulder.", "Press up and forward until your arm is straight.", "Keep your ribs down and don't twist."] },
+    front_raise: { f: [st({ hr: [4, 54] }), st({ hr: [52, -6] })],
+      cues: ["Slight bend in the elbows.", "Raise to shoulder height without swinging.", "Lower slowly."] },
+    lateral: { mirror: true, e: -1, anchor: [6, 185], f: [st({ hand: [128, 110] }), st({ hand: [172, 62] })],
+      cues: ["Slight bend in the elbows, lean very slightly forward.", "Raise your arms out to the side to shoulder height, leading with the elbows.", "Control the way down. No swinging."] },
+    ext_rot: { mirror: true, anchor: [214, 96], f: [st({ hand: [114, 96] }), st({ hand: [156, 92] })],
+      cues: ["Elbow tucked at your side, bent to 90 degrees.", "Rotate your forearm outward, keeping the elbow in place.", "Light weight and slow reps."] },
+    face_pull: { anchor: [214, 40], f: [st({ hr: [50, -12] }), st({ hr: [10, -14] })],
+      cues: ["Cable at head height, rope attachment.", "Pull towards your face, splitting the rope apart.", "Finish with your elbows high and hands beside your ears."] },
+    upright_row: { f: [st({ hr: [6, 52] }), st({ hr: [12, -4] })],
+      cues: ["Grip about shoulder width.", "Pull up close to your body, leading with the elbows.", "Stop around chest height if your shoulders complain."] },
+    shrug: { f: [st({ hr: [2, 54] }), st({ hr: [2, 54], sl: 8 })],
+      cues: ["Arms straight, weights at your sides.", "Lift your shoulders straight up towards your ears.", "Pause at the top. Don't roll your shoulders."] },
+    row_bent: { e: -1, f: [{ hip: [90, 112], sh: [133, 90], hand: [135, 144], foot: [116, 185] }, { hip: [90, 112], sh: [133, 90], hand: [112, 122], foot: [116, 185] }],
+      cues: ["Hinge forward with a flat back, knees soft.", "Pull the weight to your lower ribs, driving the elbows back.", "Squeeze your shoulder blades, then lower under control."] },
+    row_seated: { e: -1, anchor: [214, 136], props: [["rect", 60, 150, 50, 8]],
+      f: [{ hip: [84, 150], sh: [98, 104], hand: [148, 120], foot: [164, 165] }, { hip: [84, 150], sh: [80, 104], hand: [108, 126], foot: [164, 165] }],
+      cues: ["Sit tall with a slight bend in your knees.", "Pull to your belly button, squeezing your shoulder blades together.", "Let your arms extend fully without rounding forward."] },
+    inverted_row: { e: 1, props: [["thick", 128, 96, 196, 96]],
+      f: [{ hip: [86, 158], sh: [132, 142], hand: [160, 98], foot: [24, 183] }, { hip: [92, 140], sh: [136, 114], hand: [160, 98], foot: [24, 183] }],
+      cues: ["Body straight from heels to head.", "Pull your chest to the bar.", "Lower all the way until your arms are straight."] },
+    pulldown: { mirror: true, e: -1, anchor: [110, -18], props: [["rect", 86, 140, 48, 8]], f: [{ hip: [110, 140], t: 180, hand: [142, 42], foot: [124, 185] }, { hip: [110, 140], t: 180, hand: [140, 96], foot: [124, 185] }],
+      cues: ["Thighs locked under the pad, slight lean back.", "Pull the bar to your upper chest, driving your elbows down.", "Let your arms extend fully at the top for a lat stretch."] },
+    pullup: { mirror: true, e: -1, ground: false, props: [["thick", 70, 4, 150, 4]],
+      f: [{ hip: [110, 110], t: 180, hand: [140, 6], foot: [114, 188] }, { hip: [110, 80], t: 180, hand: [140, 6], foot: [114, 158] }],
+      cues: ["Start from a dead hang with your shoulders engaged.", "Pull your elbows down to your sides until your chin clears the bar.", "Lower all the way under control. No kipping."] },
+    straight_arm: { anchor: [210, 8], f: [st({ t: 170, hr: [40, -38] }), st({ t: 170, hr: [6, 54] })],
+      cues: ["Arms nearly straight, slight hinge at the hips.", "Sweep your hands down to your thighs using your lats.", "Let the weight pull your arms back up slowly."] },
+    curl: { e: -1, f: [st({ hr: [4, 54] }), st({ hr: [20, 6] })],
+      cues: ["Elbows pinned to your sides.", "Curl up without swinging your body.", "Lower slowly all the way down."] },
+    pushdown: { e: -1, anchor: [128, 0], f: [st({ hr: [16, 26] }), st({ hr: [8, 53] })],
+      cues: ["Elbows tucked at your sides, and they stay there.", "Push down until your arms are fully straight.", "Let it come up to about chest height, no higher."] },
+    overhead_ext: { e: -1, f: [st({ hr: [-8, -16] }), st({ hr: [2, -53] })],
+      cues: ["Elbows pointing up, close to your head.", "Lower the weight behind your head for a deep stretch.", "Straighten your arms without flaring the elbows."] },
+    skull: { e: -1, props: BENCH, f: [lie({ hand: [78, 82] }), lie({ hand: [60, 100] })],
+      cues: ["Start with arms straight over your shoulders.", "Bend only at the elbows, lowering towards your forehead.", "Keep your upper arms still as you straighten back up."] },
+    kickback: { e: -1, f: [{ hip: [90, 112], sh: [136, 99], hand: [124, 124], foot: [116, 185] }, { hip: [90, 112], sh: [136, 99], hand: [90, 108], foot: [116, 185] }],
+      cues: ["Hinge forward and pin your upper arm by your side.", "Straighten your arm back until it's locked.", "Lower under control without moving the upper arm."] },
+    kb_swing: { f: [{ hip: [86, 118], t: 118, hr: [-14, 52], foot: [114, 185] }, st({ t: 182, hr: [52, 4] })],
+      cues: ["It's a hip hinge, not a squat.", "Hike the bell back, then snap your hips forward.", "Arms just guide it. The bell floats to chest height."] },
+    clean: { f: [DL_LOW, st({ t: 178, hr: [2, 54] }), st({ t: 178, hr: [14, 4] })],
+      cues: ["Start like a deadlift, bar close.", "Explode up through your hips and shrug.", "Pull under and catch the bar on your shoulders, elbows high."] },
+    snatch: { f: [DL_LOW, st({ t: 178, hr: [2, 54] }), st({ t: 178, hr: [2, -54] })],
+      cues: ["Wide grip, start like a deadlift.", "Drive through your hips and keep the bar close.", "Punch it overhead and lock out in one motion."] },
+    thruster: { e: -1, f: [{ hip: [82, 150], t: 152, hr: [14, 12], foot: [114, 185] }, st({ t: 178, hr: [2, -54] })],
+      cues: ["Front squat with the weight on your shoulders.", "Drive out of the bottom and use that momentum.", "Press straight overhead in one movement."] },
+    burpee: { hold: "none", e: -1, f: [st({ hr: [4, 54] }), CROUCH, PUSH_TOP, CROUCH, { hip: [110, 92], t: 180, hr: [2, -54], foot: [114, 171] }],
+      cues: ["Squat down and put your hands on the floor.", "Jump your feet back to a plank, then back in.", "Stand and jump with your arms overhead."] },
+    box_jump: { props: [["rect", 138, 150, 56, 35]], hold: "none",
+      f: [{ hip: [86, 150], t: 140, hr: [-30, 30], foot: [96, 185] }, { hip: [160, 72], t: 180, hr: [4, 54], foot: [164, 150] }],
+      cues: ["Load your hips and swing your arms back.", "Jump and land softly with both feet on the box.", "Stand up tall, then step down."] },
+    jump: { hold: "none", f: [st({ hr: [16, 46] }), { hip: [110, 96], t: 180, hr: [16, 46], foot: [114, 175] }],
+      cues: ["Stay light on the balls of your feet.", "Small, quick jumps.", "Land softly with bent knees."] },
+    slam: { gear: "ball", f: [st({ hr: [2, -54] }), { hip: [86, 128], t: 125, hr: [4, 54], foot: [114, 185] }],
+      cues: ["Reach the ball overhead, up on your toes.", "Slam it down hard, hinging at the hips.", "Catch or pick it up and repeat."] },
+    walk: { hold: "none", k2: 1, f: [{ hip: [110, 108], t: 178, hr: [-14, 52], hr2: [16, 52], foot: [92, 185], foot2: [132, 185] }, { hip: [110, 108], t: 178, hr: [16, 52], hr2: [-14, 52], foot: [132, 185], foot2: [92, 185] }],
+      cues: ["Stand tall and keep a steady pace.", "Let your arms swing naturally.", "On an incline, don't hold on to the rails."] },
+    carry: { k2: 1, f: [{ hip: [110, 108], t: 180, hr: [2, 54], hr2: [2, 54], foot: [92, 185], foot2: [132, 185] }, { hip: [110, 108], t: 180, hr: [2, 54], hr2: [2, 54], foot: [132, 185], foot2: [92, 185] }],
+      cues: ["Pick up heavy weights with a flat back.", "Stand tall, shoulders back, core braced.", "Take short, quick steps without leaning."] },
+    carry_oh: { k2: 1, f: [{ hip: [110, 108], t: 180, hr: [2, -54], hr2: [2, -54], foot: [92, 185], foot2: [132, 185] }, { hip: [110, 108], t: 180, hr: [2, -54], hr2: [2, -54], foot: [132, 185], foot2: [92, 185] }],
+      cues: ["Lock the weight out overhead, biceps by your ears.", "Ribs down so your back doesn't arch.", "Walk with short, controlled steps."] },
+    sled: { hold: "none", k2: 1, props: [["rect", 168, 150, 36, 35]],
+      f: [{ hip: [104, 118], t: 128, hr: [40, 16], hr2: [40, 16], foot: [80, 185], foot2: [130, 180] }, { hip: [104, 118], t: 128, hr: [40, 16], hr2: [40, 16], foot: [130, 180], foot2: [80, 185] }],
+      cues: ["Lean into it with straight arms and a flat back.", "Drive with short, powerful steps.", "Push through the balls of your feet."] },
+    run: { hold: "none", k2: 1, f: [{ hip: [110, 100], t: 168, hr: [-20, 30], hr2: [24, 10], foot: [82, 170], foot2: [142, 168] }, { hip: [110, 100], t: 168, hr: [24, 10], hr2: [-20, 30], foot: [142, 168], foot2: [82, 170] }],
+      cues: ["Tall posture, slight forward lean.", "Land under your hips with short, quick steps.", "Relax your shoulders and swing your arms front to back."] },
+    bike: { hold: "none", smooth: true, props: [["thick", 92, 112, 116, 112], ["line", 124, 166, 104, 112], ["line", 124, 166, 150, 96], ["thick", 146, 92, 158, 96]],
+      f: [[142, 166], [137, 179], [124, 184], [111, 179], [106, 166], [111, 153], [124, 148], [137, 153]].map(p => ({ hip: [100, 108], t: 140, hand: [154, 94], foot: p })),
+      cues: ["Seat height so your knee is slightly bent at the bottom.", "Push and pull through the whole pedal stroke.", "Keep your upper body relaxed."] },
+    rower: { e: -1, anchor: [212, 140], props: [["line", 20, 184, 204, 184]],
+      f: [{ hip: [110, 170], sh: [136, 126], hand: [176, 140], foot: [174, 176] }, { hip: [96, 170], sh: [78, 126], hand: [104, 142], foot: [174, 176] }],
+      cues: ["Order: legs, then lean back, then arms.", "Pull the handle to your lower ribs.", "Reverse it on the way back: arms, body, then legs."] },
+    swim: { ground: false, hold: "none", e: 1, k2: 1,
+      f: [{ hip: [90, 100], sh: [138, 100], hand: [190, 100], hand2: [100, 120], foot: [12, 102], foot2: [12, 96] }, { hip: [90, 100], sh: [138, 100], hand: [100, 120], hand2: [190, 100], foot: [12, 96], foot2: [12, 102] }],
+      cues: ["Stay long and flat in the water.", "Reach forward, then pull back under your body.", "Breathe to the side, not by lifting your head."] },
+    ropes: { gear: "rope", anchor: [214, 176], hold: "hand", f: [{ hip: [96, 130], t: 160, hr: [40, 4], hr2: [40, 30], foot: [110, 185], foot2: [120, 185] }, { hip: [96, 130], t: 160, hr: [40, 30], hr2: [40, 4], foot: [110, 185], foot2: [120, 185] }],
+      cues: ["Half-squat stance, core braced.", "Alternate fast waves from your shoulders.", "Keep the waves going all the way to the anchor."] },
+    abduction: { mirror: true, hold: "none", f: [st({ hand: [124, 104], foot: [116, 185], foot2: [104, 185] }), st({ hand: [124, 104], foot: [116, 185], foot2: [64, 176] })],
+      cues: ["Stay tall and don't lean to the side.", "Move your leg out (or in) using your hip muscles only.", "Slow and controlled. Pause at the end."] },
+    back_ext: { hold: "none", props: [["rect", 94, 122, 24, 14], ["line", 40, 185, 100, 136]],
+      f: [{ hip: [104, 120], sh: [122, 165], hand: [128, 150], foot: [46, 180] }, { hip: [104, 120], sh: [138, 88], hand: [146, 102], foot: [46, 180] }],
+      cues: ["Pad just below your hips so you can hinge.", "Lower with a flat back.", "Squeeze your glutes to come up to a straight line. Don't overarch."] },
+    wall_sit: { hold: "none", props: [["thick", 66, 30, 66, 185]],
+      f: [{ hip: [80, 142], sh: [76, 94], hand: [100, 140], foot: [124, 185] }, { hip: [80, 142], sh: [76, 93], hand: [100, 140], foot: [124, 185] }],
+      cues: ["Back flat against the wall.", "Slide down until your thighs are parallel.", "Knees over ankles. Hold."] },
+    pallof: { e: -1, anchor: [214, 82], f: [st({ hr: [14, 16] }), st({ hr: [52, 6] })],
+      cues: ["Stand side-on to the cable.", "Press your hands straight out from your chest.", "Don't let the cable twist you. Brace hard."] },
+    plank: { hold: "none", e: -1, f: [{ hip: [88, 160], sh: [138, 142], hand: [164, 183], foot: [22, 183] }, { hip: [88, 157], sh: [138, 141], hand: [164, 183], foot: [22, 183] }],
+      cues: ["Elbows under your shoulders.", "Straight line from heels to head.", "Squeeze your glutes and brace like you're about to be punched."] },
+    mountain: { hold: "none", e: -1, k2: 1, f: [Object.assign({ foot2: [20, 183] }, PUSH_TOP), Object.assign({}, PUSH_TOP, { foot2: [104, 170] })],
+      cues: ["Start in a high plank.", "Drive one knee towards your chest, then switch.", "Keep your hips level."] },
+    crunch: { hold: "none", f: [{ hip: [100, 178], sh: [52, 176], hand: [100, 172], foot: [140, 183] }, { hip: [100, 178], sh: [62, 150], hand: [110, 152], foot: [140, 183] }],
+      cues: ["Lower back pressed into the floor or pad.", "Curl your ribs towards your hips.", "Breathe out as you crunch. Don't pull on your neck."] },
+    situp: { hold: "none", f: [{ hip: [100, 178], sh: [52, 176], hand: [100, 172], foot: [140, 183] }, { hip: [100, 178], sh: [94, 130], hand: [140, 148], foot: [140, 183] }],
+      cues: ["Feet anchored or flat.", "Curl up all the way until your chest is near your knees.", "Lower slowly, one vertebra at a time."] },
+    hang: { ground: false, hold: "none", props: [["thick", 80, 16, 150, 16]],
+      f: [{ hip: [110, 118], sh: [110, 70], hand: [124, 18], foot: [114, 196] }, { hip: [110, 117], sh: [110, 69], hand: [124, 18], foot: [114, 195] }],
+      cues: ["Full grip on the bar.", "Hang with your shoulders gently engaged.", "Breathe and hold."] },
+    hang_leg: { ground: false, hold: "none", props: [["thick", 80, 16, 150, 16]],
+      f: [{ hip: [110, 118], sh: [110, 70], hand: [124, 18], foot: [114, 196] }, { hip: [110, 118], sh: [108, 70], hand: [124, 18], foot: [190, 114] }],
+      cues: ["Hang still. No swinging.", "Raise your legs by curling your pelvis up.", "Lower slowly."] },
+    knee_raise: { ground: false, hold: "none", props: [["thick", 80, 16, 150, 16]],
+      f: [{ hip: [110, 118], sh: [110, 70], hand: [124, 18], foot: [114, 196] }, { hip: [110, 118], sh: [108, 70], hand: [124, 18], foot: [148, 152] }],
+      cues: ["Hang still, or back against the pad.", "Pull your knees up past your hips.", "Lower slowly without swinging."] },
+    lying_leg: { hold: "none", f: [{ hip: [98, 180], sh: [50, 180], hand: [100, 183], foot: [178, 182] }, { hip: [98, 180], sh: [50, 180], hand: [100, 183], foot: [104, 102] }],
+      cues: ["Lower back pressed into the floor.", "Raise your legs to vertical.", "Lower slowly. Stop before your back lifts."] },
+    ab_wheel: { gear: "wheel", f: [{ hip: [80, 128], sh: [118, 106], hand: [124, 166], foot: [30, 183] }, { hip: [96, 152], sh: [142, 150], hand: [192, 166], foot: [30, 183] }],
+      cues: ["Start kneeling with the wheel under your shoulders.", "Roll out slowly with your core braced.", "Go only as far as you can without your back sagging, then pull back."] },
+  };
+
+  const RULES = [
+    [/calf raise|tibialis/, "calf_raise"], [/leg press/, "leg_press"], [/leg extension/, "leg_ext"],
+    [/nordic|glute-ham/, "nordic"], [/swiss ball leg curl|sliding leg curl/, "glute_bridge"], [/leg curl/, "leg_curl"],
+    [/hip thrust|barbell glute bridge/, "hip_thrust"], [/glute bridge|frog pump/, "glute_bridge"],
+    [/pull-through|kettlebell swing/, "kb_swing"], [/glute kickback/, "glute_kick"],
+    [/abduction|adduction|clamshell|lateral walk/, "abduction"], [/back extension|hyperextension|superman/, "back_ext"],
+    [/good morning/, "goodmorning"], [/romanian|stiff-leg/, "rdl"],
+    [/clean and jerk|clean pull|power clean|hang clean|kettlebell clean/, "clean"], [/snatch(?!-grip)/, "snatch"],
+    [/deadlift|rack pull|tyre flip/, "deadlift"], [/thruster|wall ball/, "thruster"], [/burpee|man maker/, "burpee"],
+    [/box jump/, "box_jump"], [/broad jump|jump squat|jump rope/, "jump"], [/slam/, "slam"], [/turkish/, "situp"],
+    [/overhead carry/, "carry_oh"], [/carry/, "carry"], [/sled/, "sled"], [/battle rope/, "ropes"], [/wall sit/, "wall_sit"],
+    [/rowing machine/, "rower"], [/split squat|lunge/, "lunge"], [/step-up/, "stepup"], [/overhead squat/, "squat_oh"],
+    [/goblet|front squat|zercher|dumbbell squat|heel-elevated|sumo squat|spanish|sissy|pistol|bodyweight squat/, "squat_front"],
+    [/squat/, "squat"], [/landmine press|landmine shoulder/, "landmine"], [/landmine rotation|pallof|woodchop/, "pallof"],
+    [/dumbbell pullover/, "pullover_lying"], [/pullover|straight-arm|skierg/, "straight_arm"],
+    [/rear delt|reverse pec|pull-apart/, "lateral"], [/fly|pec deck/, "fly"], [/incline.*press/, "incline"],
+    [/chest press|svend/, "press_seated"], [/skull|tate press/, "skull"],
+    [/shoulder press|overhead press|push press|behind-the-neck|z press|arnold|kettlebell press|single-arm dumbbell press/, "ohp"],
+    [/bench press|floor press|dumbbell press|squeeze press|jm press|spoto|larsen/, "bench"],
+    [/pike|handstand/, "pike"], [/push-up/, "pushup"], [/dip/, "dip"],
+    [/overhead.*extension/, "overhead_ext"], [/pushdown|cross-body cable extension|tricep extension/, "pushdown"],
+    [/kickback/, "kickback"], [/upright row|cuban/, "upright_row"], [/face pull/, "face_pull"],
+    [/lateral raise|lu raise/, "lateral"], [/front raise|y-raise/, "front_raise"], [/rotation/, "ext_rot"],
+    [/shrug|plate pinch/, "shrug"], [/pull-up|chin-up/, "pullup"], [/pulldown/, "pulldown"], [/inverted row/, "inverted_row"],
+    [/seated cable row|single-arm cable row|machine row|hammer strength row|chest-supported t-bar/, "row_seated"],
+    [/row/, "row_bent"], [/curl|gripper|wrist roller/, "curl"], [/dead hang/, "hang"],
+    [/hanging knee|captain/, "knee_raise"], [/hanging leg|toes-to-bar|l-sit/, "hang_leg"],
+    [/lying leg raise|flutter|dead bug|dragon flag/, "lying_leg"], [/ab wheel/, "ab_wheel"], [/mountain climber/, "mountain"],
+    [/plank|bird dog|hollow/, "plank"], [/sit-up|v-up|russian twist/, "situp"], [/crunch|ab coaster|rotary torso/, "crunch"],
+    [/run/, "run"], [/walk|elliptical|stair/, "walk"], [/bike|cycling/, "bike"], [/swim/, "swim"]
+  ];
+  const FALLBACK = { Chest: "bench", Back: "row_bent", Shoulders: "ohp", Biceps: "curl", Triceps: "pushdown", Forearms: "curl", Quads: "squat", Hamstrings: "rdl", Glutes: "hip_thrust", Calves: "calf_raise", Abs: "crunch", "Full body": "deadlift", Cardio: "run" };
+
+  function patternFor(ex) {
+    const n = ex.name.toLowerCase();
+    for (const [re, p] of RULES) if (re.test(n)) return p;
+    return FALLBACK[ex.muscle] || "squat";
+  }
+
+  function lerp(p, q, u) {
+    const o = {};
+    for (const k in p) {
+      const a = p[k], b = q[k] ?? a;
+      o[k] = Array.isArray(a) ? [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u] : typeof a === "number" ? a + (b - a) * u : a;
+    }
+    return o;
+  }
+  function at(def, time) {
+    const f = def.f, n = f.length;
+    if (n === 1) return f[0];
+    const hold = def.smooth ? 0 : 0.35, move = def.smooth ? 0.16 : 1.1, per = hold + move;
+    const x = (time % (per * n)) / per, i = Math.floor(x), r = (x - i) * per;
+    if (r < hold) return f[i];
+    let u = (r - hold) / move;
+    if (!def.smooth) u = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    return lerp(f[i], f[(i + 1) % n], u);
+  }
+
+  const P = n => n.toFixed(1);
+  const pl = pts => pts.map(p => P(p[0]) + "," + P(p[1])).join(" ");
+
+  function solve(def, Q) {
+    const m = !!def.mirror, e = def.e ?? 1, k = def.k ?? 1;
+    const hip = Q.hip;
+    const sh = Q.sh || add(hip, vec(Q.t, L.T + (Q.sl || 0)));
+    const dx = sh[0] - hip[0], dy = sh[1] - hip[1], dl = Math.hypot(dx, dy) || 1;
+    const head = [sh[0] + dx / dl * 15, sh[1] + dy / dl * 15];
+    const S1 = [sh[0] + (m ? 12 : 0), sh[1]], H1 = [hip[0] + (m ? 8 : 0), hip[1]];
+    const hand = Q.hr ? add(sh, Q.hr) : Q.hand;
+    const [el, ha] = ik(S1, hand, L.UA, L.FA, e);
+    const [kn, an] = ik(H1, Q.foot, L.TH, L.SH, k);
+    let S2 = S1, H2 = H1, el2, ha2, kn2, an2, two = false;
+    if (m) {
+      S2 = [sh[0] - 12, sh[1]]; H2 = [hip[0] - 8, hip[1]];
+      [el2, ha2] = ik(S2, Q.hand2 || [2 * sh[0] - hand[0], hand[1]], L.UA, L.FA, -e);
+      [kn2, an2] = ik(H2, Q.foot2 || [2 * hip[0] - Q.foot[0], Q.foot[1]], L.TH, L.SH, -k);
+      two = true;
+    } else {
+      const h2 = Q.hr2 ? add(sh, Q.hr2) : Q.hand2;
+      if (h2) { [el2, ha2] = ik(S1, h2, L.UA, L.FA, def.e2 ?? e); two = true; }
+      else { el2 = [el[0] - 3, el[1] - 2]; ha2 = [ha[0] - 3, ha[1] - 2]; }
+      if (Q.foot2) [kn2, an2] = ik(H1, Q.foot2, L.TH, L.SH, def.k2 ?? k);
+      else { kn2 = [kn[0] - 3, kn[1] - 1]; an2 = [an[0] - 3, an[1]]; }
+    }
+    return { m, hip, sh, head, S1, S2, H1, H2, el, ha, kn, an, el2, ha2, kn2, an2, two, toe: Q.toe };
+  }
+
+  function toeOf(kn, an) {
+    const sx = an[0] - kn[0], sy = an[1] - kn[1], l = Math.hypot(sx, sy) || 1;
+    return [an[0] + sy / l * 11, an[1] - sx / l * 11];
+  }
+
+  function gear(def, equip, s) {
+    const at = def.hold || "hand";
+    if (at === "none") return "";
+    let kind = def.gear || ({ BB: "bar", EZ: "bar", SM: "bar", TB: "bar", DB: "db", KB: "kb", PL: "plate", CB: "cable", BD: "band", MC: def.anchor ? "cable" : "" })[equip] || "";
+    if ((def.gear === "pad" || def.gear === "sled") && equip === "CB") kind = "cable";
+    const p = at === "shoulder" ? [s.sh[0] - 7, s.sh[1] + 6] : at === "hip" ? [s.hip[0], s.hip[1] - 7] : at === "foot" ? s.an : s.ha;
+    const pts = at === "hand" && s.two ? [p, s.ha2] : [p];
+    const anc = def.anchor || [214, p[1]];
+    const ancFor = q => s.m && q === s.ha2 ? [2 * s.sh[0] - anc[0], anc[1]] : anc;
+    switch (kind) {
+      case "bar":
+        if (s.m && at === "hand") return `<line x1="${P(s.ha2[0] - 18)}" y1="${P(s.ha2[1])}" x2="${P(s.ha[0] + 18)}" y2="${P(s.ha[1])}" class="dm-bar"/><rect x="${P(s.ha2[0] - 24)}" y="${P(s.ha2[1] - 13)}" width="6" height="26" rx="2" class="dm-w"/><rect x="${P(s.ha[0] + 18)}" y="${P(s.ha[1] - 13)}" width="6" height="26" rx="2" class="dm-w"/>`;
+        return `<circle cx="${P(p[0])}" cy="${P(p[1])}" r="14" class="dm-w"/><circle cx="${P(p[0])}" cy="${P(p[1])}" r="3" class="dm-hub"/>`;
+      case "db": return pts.map(q => `<rect x="${P(q[0] - 9)}" y="${P(q[1] - 5)}" width="18" height="10" rx="3" class="dm-w"/>`).join("");
+      case "kb": return pts.map(q => `<circle cx="${P(q[0])}" cy="${P(q[1] + 10)}" r="8" class="dm-w"/><line x1="${P(q[0])}" y1="${P(q[1])}" x2="${P(q[0])}" y2="${P(q[1] + 4)}" class="dm-c"/>`).join("");
+      case "plate": return `<circle cx="${P(p[0])}" cy="${P(p[1])}" r="11" class="dm-w"/><circle cx="${P(p[0])}" cy="${P(p[1])}" r="3" class="dm-hub"/>`;
+      case "ball": return `<circle cx="${P(p[0])}" cy="${P(p[1] - 6)}" r="10" class="dm-w"/>`;
+      case "wheel": return `<circle cx="${P(p[0])}" cy="${P(p[1] + 9)}" r="9" class="dm-wheel"/>`;
+      case "pad": return `<circle cx="${P(p[0])}" cy="${P(p[1])}" r="6" class="dm-pad"/>`;
+      case "sled": return `<line x1="${P(p[0] - 10)}" y1="${P(p[1] - 14)}" x2="${P(p[0] + 10)}" y2="${P(p[1] + 14)}" class="dm-sled"/>`;
+      case "rope": return pts.map(q => `<polyline points="${pl([q, [q[0] + 18, q[1] + 10], [q[0] + 36, q[1] - 2], [anc[0], anc[1]]])}" class="dm-rope"/>`).join("");
+      case "cable": case "band": return pts.map(q => { const a = ancFor(q); return `<line x1="${P(q[0])}" y1="${P(q[1])}" x2="${P(a[0])}" y2="${P(a[1])}" class="${kind === "band" ? "dm-band" : "dm-c"}"/><circle cx="${P(q[0])}" cy="${P(q[1])}" r="3.5" class="dm-w"/>`; }).join("");
+    }
+    return "";
+  }
+
+  function svg(def, equip, Q, ghost) {
+    const s = solve(def, Q);
+    const props = (def.props || []).map(([t, a, b, c, d]) =>
+      t === "rect" ? `<rect x="${a}" y="${b}" width="${c}" height="${d}" rx="2" class="dm-prop"/>` :
+      t === "thick" ? `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" class="dm-thick"/>` :
+      `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" class="dm-thin"/>`).join("");
+    const toe1 = s.m ? [] : [s.toe || toeOf(s.kn, s.an)], toe2 = s.m ? [] : [toeOf(s.kn2, s.an2)];
+    const cls = ghost ? "dm-ghost" : "";
+    let o = `<g class="${cls}">`;
+    if (!ghost) o += props + (def.ground === false ? "" : `<line x1="0" y1="${GROUND + 1.5}" x2="220" y2="${GROUND + 1.5}" class="dm-ground"/>`);
+    o += `<polyline points="${pl([s.H2, s.kn2, s.an2, ...toe2])}" class="dm-far"/>`;
+    o += `<polyline points="${pl([s.S2, s.el2, s.ha2])}" class="dm-far"/>`;
+    if (s.m) o += `<line x1="${P(s.S2[0])}" y1="${P(s.S2[1])}" x2="${P(s.S1[0])}" y2="${P(s.S1[1])}" class="dm-body"/><line x1="${P(s.H2[0])}" y1="${P(s.H2[1])}" x2="${P(s.H1[0])}" y2="${P(s.H1[1])}" class="dm-body"/>`;
+    o += `<line x1="${P(s.hip[0])}" y1="${P(s.hip[1])}" x2="${P(s.sh[0])}" y2="${P(s.sh[1])}" class="dm-torso"/>`;
+    o += `<circle cx="${P(s.head[0])}" cy="${P(s.head[1])}" r="9" class="dm-head"/>`;
+    o += `<polyline points="${pl([s.H1, s.kn, s.an, ...toe1])}" class="dm-body"/>`;
+    if (!ghost) o += gear(def, equip, s);
+    o += `<polyline points="${pl([s.S1, s.el, s.ha])}" class="dm-body"/>`;
+    return o + "</g>";
+  }
+
+  const reduce = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } })();
+  const live = new Set();
+  let raf = 0;
+  function loop(now) {
+    raf = 0;
+    for (const el of live) {
+      if (!el.isConnected) { live.delete(el); continue; }
+      const d = el.__demo;
+      el.innerHTML = svg(d.def, d.equip, at(d.def, (now - d.t0) / 1000));
+    }
+    if (live.size) raf = requestAnimationFrame(loop);
+  }
+  function play(el, ex) {
+    const def = D[patternFor(ex)];
+    el.setAttribute("viewBox", "0 -18 220 218");
+    if (reduce || def.f.length === 1) {
+      // still image: the end position over a faint start position
+      el.innerHTML = svg(def, ex.equip, def.f[0], true) + svg(def, ex.equip, def.f[Math.min(1, def.f.length - 1)]);
+      return;
+    }
+    el.__demo = { def, equip: ex.equip, t0: performance.now() };
+    live.add(el);
+    if (!raf) raf = requestAnimationFrame(loop);
+  }
+  function still(el, ex, i) {
+    const def = D[patternFor(ex)];
+    el.setAttribute("viewBox", "0 -18 220 218");
+    el.innerHTML = svg(def, ex.equip, def.f[i % def.f.length]);
+  }
+  function cues(ex) { return D[patternFor(ex)].cues; }
+  function frame(el, name, equip, i) { el.setAttribute("viewBox", "0 -18 220 218"); el.innerHTML = svg(D[name], equip, D[name].f[i]); }
+  function stop(el) { live.delete(el); }
+  return { play, still, frame, stop, cues, patternFor, patterns: D };
+})();
+</script>
 
 <script>
 (() => {
@@ -380,7 +796,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
         <input id="tplName" class="search" style="border-width:1px" value="${esc(t.name)}" placeholder="Name, e.g. Chest & Triceps" aria-label="Template name">
         ${t.ex.length ? `<div>${t.ex.map((e, i) => { const x = exInfo(e.id); return `<div class="tline"><div><b>${esc(x.name)}</b><span class="small muted">${esc(x.muscle)} · ${EQUIP[x.equip] || ""}</span></div>
           <div class="serv"><button data-act="tpl-sets" data-i="${i}" data-d="-1" aria-label="Fewer sets">−</button><span class="num">${e.sets} set${e.sets > 1 ? "s" : ""}</span><button data-act="tpl-sets" data-i="${i}" data-d="1" aria-label="More sets">+</button></div>
-          <div class="ex-menu"><button data-act="tpl-up" data-i="${i}" ${i ? "" : "disabled"} aria-label="Move up">↑</button><button data-act="tpl-rm" data-i="${i}" aria-label="Remove">×</button></div></div>`; }).join("")}</div>`
+          <div class="ex-menu"><button data-act="demo" data-id="${e.id}" aria-label="How to do ${esc(x.name)}">?</button><button data-act="tpl-up" data-i="${i}" ${i ? "" : "disabled"} aria-label="Move up">↑</button><button data-act="tpl-rm" data-i="${i}" aria-label="Remove">×</button></div></div>`; }).join("")}</div>`
           : `<div class="empty">Add the exercises for this session, in the order you do them.</div>`}
         <button class="btn ghost" data-act="tpl-pick">+ Add exercises</button></div>
       ${state.confirm === "tpl" ? `<div class="confirm"><span>Delete the "${esc(t.name)}" template? Past workouts stay in your history.</span><button class="btn danger" data-act="tpl-del-yes">Delete</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
@@ -414,7 +830,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
       const info = exInfo(e.id), K = KINDS[info.kind], prev = prevSets(e.id, w.start);
       html += `<div class="ex" data-ei="${ei}">
         <div class="ex-top"><div><h3>${esc(info.name)}</h3><span class="small muted">${esc(info.muscle)} · ${EQUIP[info.equip] || ""}</span></div>
-          <div class="ex-menu"><button data-act="up" data-ei="${ei}" aria-label="Move up" ${ei ? "" : "disabled"}>↑</button><button data-act="rmex" data-ei="${ei}" aria-label="Remove exercise">×</button></div></div>
+          <div class="ex-menu"><button data-act="demo" data-id="${e.id}" aria-label="How to do ${esc(info.name)}">?</button><button data-act="up" data-ei="${ei}" aria-label="Move up" ${ei ? "" : "disabled"}>↑</button><button data-act="rmex" data-ei="${ei}" aria-label="Remove exercise">×</button></div></div>
         ${state.confirm === "ex" + ei ? `<div class="confirm" style="margin:0 14px 8px"><span>Remove ${esc(info.name)} and its sets?</span><button class="btn danger" data-act="rmex-yes" data-ei="${ei}">Remove</button><button class="btn ghost" data-act="cancel">Keep</button></div>` : ""}
         <table class="sets"><thead><tr><th>Set</th><th>Previous</th><th>${K.a}</th><th>${K.b}</th><th><span class="sr" aria-label="Done">✓</span></th></tr></thead><tbody>
         ${e.sets.map((s, si) => {
@@ -512,6 +928,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
     v.innerHTML = `
       <button class="link" data-act="back" style="align-self:flex-start">‹ All lifts</button>
       <div><h2 style="font-size:1.8rem">${esc(i.name)}</h2><span class="muted">${esc(i.muscle)} · ${EQUIP[i.equip] || ""}</span></div>
+      <button class="btn ghost" data-act="demo" data-id="${id}">How to do it</button>
       <div class="prgrid">${tiles.map(([l, val]) => `<div class="stat"><span class="label">${l}</span><b>${val}</b></div>`).join("")}</div>
       <div class="card"><h2>${mLabel} over time</h2>${lineChart(pts, mUnit)}${k === "wr" ? `<p class="small muted" style="margin:0">Estimated 1RM uses the Epley formula on your best set each session: weight × (1 + reps ÷ 30). It lets you compare a set of 8 with a set of 5.</p>` : ""}</div>
       ${repTable}
@@ -647,6 +1064,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
       }
       case "tpl-del": state.confirm = "tpl"; renderWorkout(); break;
       case "tpl-del-yes": { const id = state.editTpl.id; delete state.templates[id]; put(id, null); state.editTpl = null; state.confirm = null; renderWorkout(); toast("Template deleted"); break; }
+      case "demo": openDemo(b.dataset.id); break;
       case "hist": state.openHist = state.openHist === b.dataset.id ? null : b.dataset.id; state.confirm = null; renderHistory(); break;
       case "del": state.confirm = "del" + b.dataset.id; renderHistory(); break;
       case "del-yes": delete state.workouts[b.dataset.id]; put(b.dataset.id, null); state.confirm = null; renderHistory(); toast("Workout deleted"); break;
@@ -739,7 +1157,7 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
     const q = norm(p.q);
     const filtered = allEx().filter(x => (!p.muscle || x.muscle === p.muscle) && (!p.equip || x.equip === p.equip) && matches(x, q));
     const used = {}; for (const w of finished()) for (const e of w.ex) used[e.id] = Math.max(used[e.id] || 0, w.start);
-    const row = x => `<button class="prow" data-pid="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="nm"><b>${esc(x.name)}${x.id.startsWith("c-") ? ' <span class="small muted">(custom)</span>' : ""}</b><span>${esc(x.muscle)} · ${EQUIP[x.equip] || ""}${used[x.id] ? " · last " + dateShort(used[x.id]) : ""}</span></span><span class="box">${sel.has(x.id) ? p.sel.indexOf(x.id) + 1 : ""}</span></button>`;
+    const row = x => `<div class="prow-w"><button class="prow" data-pid="${x.id}" aria-pressed="${sel.has(x.id)}"><span class="nm"><b>${esc(x.name)}${x.id.startsWith("c-") ? ' <span class="small muted">(custom)</span>' : ""}</b><span>${esc(x.muscle)} · ${EQUIP[x.equip] || ""}${used[x.id] ? " · last " + dateShort(used[x.id]) : ""}</span></span><span class="box">${sel.has(x.id) ? p.sel.indexOf(x.id) + 1 : ""}</span></button><button class="info" data-act="demo" data-id="${x.id}" aria-label="How to do ${esc(x.name)}">?</button></div>`;
     let html = "";
     if (!filtered.length) html = `<div class="empty" style="margin-top:12px">No match for "${esc(p.q)}". <button class="link" id="emptyCustom">Create it as a custom exercise</button></div>`;
     else if (!q && !p.muscle && !p.equip) {
@@ -759,6 +1177,22 @@ tr.done .tick { background: var(--done); border-color: var(--done); color: #fff;
     if (i >= 0) p.sel.splice(i, 1); else p.sel.push(id);
     renderPickList();
   });
+
+  // ---------- how-to demos ----------
+  function openDemo(id) {
+    const info = exInfo(id);
+    $("demoTitle").textContent = info.name;
+    $("demoMeta").textContent = `${info.muscle} · ${EQUIP[info.equip] || ""}`;
+    $("demoCues").innerHTML = IronDemo.cues(info).map(c => `<li>${esc(c)}</li>`).join("");
+    $("demoVideo").href = "https://www.youtube.com/results?search_query=" + encodeURIComponent(`how to ${info.name.replace(/\(.*?\)/g, "").trim()} proper form`);
+    $("demo").hidden = false;
+    IronDemo.play($("demoSvg"), info);
+    $("demoClose").focus();
+  }
+  function closeDemo() { IronDemo.stop($("demoSvg")); $("demo").hidden = true; }
+  $("demoClose").onclick = closeDemo;
+  $("demo").addEventListener("click", e => { if (e.target === $("demo")) closeDemo(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("demo").hidden) closeDemo(); });
 
   // ---------- clock ----------
   setInterval(() => { const c = $("wkClock"); if (c && state.active) c.textContent = clock((Date.now() - state.active.start) / 1000); }, 1000);
