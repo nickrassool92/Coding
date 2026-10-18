@@ -122,6 +122,12 @@ td.fx { padding: 0 2px; }
 .d4 { background: var(--f4); color: #2B0D08; } .d5 { background: var(--f5); color: #fff; } .d0 { background: transparent; color: var(--muted); border: 1px dashed var(--hair); }
 
 .ideas { display: flex; flex-direction: column; gap: 6px; }
+.when { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
+.when.later { background: var(--warn-soft); color: var(--warn); }
+.weeks { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 1 / -1; }
+.weeks span { font-family: var(--mono); font-size: 0.75rem; padding: 2px 6px; border-radius: 6px; background: var(--bg); border: 1px solid var(--hair); }
+.weeks span.pos { color: var(--accent); }
+.weeks span.neg { color: var(--bad); }
 .idea { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--hair); padding-bottom: 6px; flex-wrap: wrap; }
 .chipsgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .chipcard { border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
@@ -213,6 +219,7 @@ td.fx { padding: 0 2px; }
         <div class="side"><span class="label">Sell</span><b class="out-name">${esc(m.out.name)}</b><span class="small muted">${esc(m.out.team)} · £${(m.out.sell ?? m.out.price).toFixed(1)}m</span></div>
         <span class="arrow" aria-hidden="true">→</span>
         <div class="side in"><span class="label">Buy</span><b class="in-name">${esc(m.in.name)}</b><span class="small muted">${esc(m.in.team)} · £${m.in.price.toFixed(1)}m</span></div>
+        ${m.weekly ? `<div class="weeks" aria-label="Points gained each gameweek">${d.gws.map((g, i) => `<span class="${m.weekly[i] >= 0 ? "pos" : "neg"}">GW${g} ${m.weekly[i] >= 0 ? "+" : ""}${m.weekly[i].toFixed(1)}</span>`).join("")}</div>` : ""}
         <p class="why">${esc(m.in.name)} projects ${m.in.xp5} points over the next ${d.gws.length} gameweeks against ${m.out.xp5} for ${esc(m.out.name)}, and has ${m.in.total} points so far (form ${m.in.form}). Next games: ${esc(m.in.fixtures.slice(0, 3).map(fx).join("; "))}.${m.alternatives.length ? ` Also good: ${m.alternatives.map(a => `${esc(a.in.name)} (${esc(a.in.team)}, £${a.in.price.toFixed(1)}m)`).join(", ")}.` : ""}</p>
       </div>`).join("");
 
@@ -240,7 +247,12 @@ td.fx { padding: 0 2px; }
       [...squad].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]).map(p => `<tr><td><b>${esc(p.name)}</b> <span class="muted small">${esc(p.team)}</span></td>${p.fixtures.map(list => `<td class="fx">${list.length ? list.map(f => `<span class="chip d${f.fdr}">${esc(f.opp)} ${f.home ? "H" : "A"}</span>`).join("") : `<span class="chip d0">–</span>`}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
 
     // Other single-transfer ideas
-    const ideas = d.ideas.map(i => `<div class="idea"><span><b class="out-name">${esc(i.out.name)}</b> → <b class="in-name">${esc(i.in.name)}</b> <span class="muted small">${esc(i.in.team)} · £${i.in.price.toFixed(1)}m</span></span><span class="num small">+${i.gain.toFixed(1)} pts</span></div>`).join("");
+    const idea = i => {
+      const later = i.best_gw && i.best_gw > d.next_gw;
+      const weeks = i.weekly ? d.gws.map((g, k) => `GW${g} ${i.weekly[k] >= 0 ? "+" : ""}${i.weekly[k].toFixed(1)}`).join(", ") : "";
+      return `<div class="idea"><span><b class="out-name">${esc(i.out.name)}</b> → <b class="in-name">${esc(i.in.name)}</b> <span class="muted small">${esc(i.in.team)} · £${i.in.price.toFixed(1)}m</span></span><span><span class="when ${later ? "later" : ""}">${later ? `Gameweek ${i.best_gw}` : "Now"}</span> <span class="num small">+${i.gain.toFixed(1)} pts</span></span>${weeks ? `<span class="small muted" style="flex-basis:100%">${esc(weeks)}</span>` : ""}</div>`;
+    };
+    const ideas = [...d.ideas].sort((a, b) => (a.best_gw || 0) - (b.best_gw || 0) || b.gain - a.gain).map(idea).join("");
 
     // Chips
     const cv = Object.entries(d.chip_view).map(([g, v]) => ({ g: Number(g), ...v }));
@@ -277,7 +289,7 @@ td.fx { padding: 0 2px; }
       </section>
       <section class="panel">
         <h2>Other transfer ideas</h2>
-        <p class="small muted">The best single move for each player you could sell, scored over the next ${d.gws.length} gameweeks.</p>
+        <p class="small muted">Each move shows the best gameweek to make it and the points it adds each week. Waiting is better when a player has tough games first, because you keep the transfer in hand.</p>
         <div class="ideas">${ideas}</div>
       </section>
       ${chipCards.length ? `<section class="panel"><h2>Chips</h2><div class="chipsgrid">${chipCards.join("")}</div></section>` : ""}`;

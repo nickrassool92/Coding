@@ -19,6 +19,7 @@ FDR_ATT = {1: 1.25, 2: 1.15, 3: 1.0, 4: 0.8, 5: 0.68}
 FDR_DEF = {1: 1.35, 2: 1.2, 3: 1.0, 4: 0.7, 5: 0.5}
 SQUAD_LIMIT = {1: 2, 2: 5, 3: 5, 4: 3}
 HIT = 4
+SAVED_FT = 1.0  # rough value, in points, of keeping a transfer in hand for another gameweek (counted for up to two)
 
 
 def load(d, name):
@@ -134,7 +135,7 @@ def main(entry_id, d, out_path):
             ft = 1
             continue
         if chips_used.get(g) in ("wildcard", "freehit"):
-            ft = min(5, ft + 1)
+            continue  # transfers in a Wildcard or Free Hit week are free, and nothing is banked
         else:
             ft = min(5, max(0, ft - h["event_transfers"]) + 1)
     ft = ft or 1
@@ -172,13 +173,27 @@ def main(entry_id, d, out_path):
             c[E[i]["team"]] = c.get(E[i]["team"], 0) + 1
         return c
 
-    def squad_value(ids):
-        """Weighted points the best XI plus captain would score over the horizon, with a little credit for the bench."""
-        total = 0.0
-        for gi, w in enumerate(WEIGHTS[:len(gws)]):
+    def week_values(ids):
+        """Points the best XI plus captain would score each gameweek, with a little credit for the bench."""
+        vals = []
+        for gi in range(len(gws)):
             xi = best_xi(ids, gi)
-            total += w * (xi["xp"] + 0.1 * sum(proj[i][gi]["xp"] for i in xi["bench"]))
-        return total
+            vals.append(xi["xp"] + 0.1 * sum(proj[i][gi]["xp"] for i in xi["bench"]))
+        return vals
+
+    def squad_value(ids):
+        return sum(w * v for w, v in zip(WEIGHTS, week_values(ids)))
+
+    def timing(ids, out, inn):
+        """Gain in each gameweek from swapping out for inn, and the best gameweek to make the move.
+
+        Making a move in gameweek t earns the gains from t onwards. Waiting gives up the earlier
+        gains but keeps a transfer in hand, worth about SAVED_FT points a week for up to two weeks."""
+        before = week_values(ids)
+        after = week_values([inn if i == out else i for i in ids])
+        deltas = [round(a - b, 2) for a, b in zip(after, before)]
+        score = [sum(w * d for w, d in zip(WEIGHTS[t:], deltas[t:])) + SAVED_FT * min(t, 2) for t in range(len(deltas))]
+        return deltas, gws[max(range(len(score)), key=lambda t: (score[t], -t))]
 
     def best_single(ids, money):
         clubs = club_counts(ids)
@@ -208,31 +223,43 @@ def main(entry_id, d, out_path):
                 "form": float(p["form"] or 0), "total": p["total_points"], "ownership": float(p["selected_by_percent"] or 0),
                 "xp": [r["xp"] for r in proj[pid]], "xp5": round(horizon(pid), 1), "fixtures": [r["fixtures"] for r in proj[pid]]}
 
-    # Plans for 0 to 3 transfers, each built greedily from the best remaining single move.
+    # Plans for 0 to 3 transfers this gameweek, built greedily from the best remaining move
+    # that pays its way this week. Moves that only pay later are listed as upcoming instead.
     plans = []
     ids, money, moves = list(squad_ids), bank, []
     plans.append({"transfers": 0, "moves": [], "gain": 0.0, **best_xi(ids)})
     for n in range(1, 4):
-        opts = best_single(ids, money)
-        if not opts:
+        pick = None
+        for opt in best_single(ids, money)[:40]:
+            deltas, when = timing(ids, opt[1], opt[2])
+            if when == gws[0]:
+                pick = (opt, deltas)
+                break
+        if not pick:
             break
-        gain, out, inn, left = opts[0]
+        (gain, out, inn, left), deltas = pick
+        alts = [o for o in best_single(ids, money) if o[1] == out and o[2] != inn][:3]
         ids = [inn if i == out else i for i in ids]
         money = left
-        moves.append({"out": describe(out), "in": describe(inn), "gain": round(gain, 1),
-                      "alternatives": [{"in": describe(o[2]), "gain": round(o[0], 1)} for o in opts[1:] if o[1] == out][:3]})
+        moves.append({"out": describe(out), "in": describe(inn), "gain": round(gain, 1), "weekly": deltas,
+                      "alternatives": [{"in": describe(o[2]), "gain": round(o[0], 1)} for o in alts]})
         total_gain = round(sum(m["gain"] for m in moves), 1)
         plans.append({"transfers": n, "moves": list(moves), "gain": total_gain, "bank": money / 10, **best_xi(ids)})
         squad_after = ids
 
-    # Top single-transfer ideas across the squad, one per player sold.
-    ideas, seen = [], set()
+    # Other transfer ideas: each player sold and each player bought appears once, leaving out
+    # this week's top move, so later moves (and the week to make them) show up too.
+    first = plans[1]["moves"][0] if len(plans) > 1 else None
+    seen = {first["out"]["id"], first["in"]["id"]} if first else set()
+    ideas = []
     for gain, out, inn, left in best_single(squad_ids, bank):
-        if out in seen:
+        if out in seen or inn in seen:
             continue
-        seen.add(out)
-        ideas.append({"out": describe(out), "in": describe(inn), "gain": round(gain, 1), "bank_after": left / 10})
-        if len(ideas) == 5:
+        seen.update((out, inn))
+        deltas, when = timing(squad_ids, out, inn)
+        ideas.append({"out": describe(out), "in": describe(inn), "gain": round(gain, 1), "bank_after": left / 10,
+                      "weekly": deltas, "best_gw": when})
+        if len(ideas) == 6:
             break
 
     # Chip guidance from the current squad's projections.
