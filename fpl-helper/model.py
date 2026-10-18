@@ -15,8 +15,8 @@ POS = {1: "GKP", 2: "DEF", 3: "MID", 4: "FWD"}
 GOAL_PTS = {1: 10, 2: 6, 3: 5, 4: 4}
 CS_PTS = {1: 4, 2: 4, 3: 1, 4: 0}
 POS_MEAN = {1: 3.2, 2: 3.3, 3: 3.8, 4: 4.0}
-FDR_ATT = {1: 1.25, 2: 1.15, 3: 1.0, 4: 0.85, 5: 0.72}
-FDR_DEF = {1: 1.35, 2: 1.2, 3: 1.0, 4: 0.75, 5: 0.55}
+FDR_ATT = {1: 1.25, 2: 1.15, 3: 1.0, 4: 0.8, 5: 0.68}
+FDR_DEF = {1: 1.35, 2: 1.2, 3: 1.0, 4: 0.7, 5: 0.5}
 SQUAD_LIMIT = {1: 2, 2: 5, 3: 5, 4: 3}
 HIT = 4
 
@@ -81,9 +81,10 @@ def main(entry_id, d, out_path):
         dc_pts = 2 * min(1.0, dc / (10 if t == 2 else 12) * 0.8) if t != 1 else 0
         under_att = att
         under_def = 2 + cs + conceded + saves + bonus + dc_pts
-        # Shrink towards the actual points per game, then towards the position mean for small samples.
+        # Shrink towards the actual points per game, then towards the position mean, so a hot
+        # start over a handful of games does not count as much as a full season.
         ppg = float(p["points_per_game"] or 0)
-        k = min(1.0, m90 / 6)
+        k = m90 / (m90 + 6)
         blend = 0.6 * (under_att + under_def) + 0.4 * ppg if m90 else POS_MEAN[t]
         total = k * blend + (1 - k) * POS_MEAN[t]
         share_att = under_att / (under_att + under_def) if (under_att + under_def) > 0 else 0.3
@@ -101,8 +102,11 @@ def main(entry_id, d, out_path):
                 pts += availability(p, i) * (att * FDR_ATT[diff] + dfn * FDR_DEF[diff]) * h
                 fx.append({"opp": teams[opp]["short_name"], "home": home, "fdr": diff})
             row.append({"gw": g, "xp": round(pts, 2), "fixtures": fx})
-        if row and p["ep_next"] not in (None, ""):
-            row[0]["xp"] = round(0.6 * row[0]["xp"] + 0.4 * float(p["ep_next"]), 2)
+        if row and p["ep_next"] not in (None, "") and by_gw[gws[0]][p["team"]]:
+            # FPL's own figure leans on form, so scale it by this week's fixture before blending.
+            diffs = [diff for _, _, diff in by_gw[gws[0]][p["team"]]]
+            fix = sum(0.5 * FDR_ATT[x] + 0.5 * FDR_DEF[x] for x in diffs)
+            row[0]["xp"] = round(0.8 * row[0]["xp"] + 0.2 * float(p["ep_next"]) * fix, 2)
         proj[p["id"]] = row
 
     def horizon(pid):
