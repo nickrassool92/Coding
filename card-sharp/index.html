@@ -215,7 +215,8 @@ td.num, th.num { text-align: right; }
       <p>Each pick weighs the player's booking rate, expected minutes, the opponent they'll be up against, the referee, and how the match is likely to play out. Teams without the ball foul more, and derbies and relegation fights run hot.</p>
       <p>Each pick's chance is turned into a fair price. <b>Take at</b> is the lowest Sportsbet price that still gives at least a 5% edge. If Sportsbet is offering less, skip the bet. Stakes are quarter Kelly on a 100-unit bank, capped at 3 units, and go up when you enter a bigger price.</p>
       <ul>
-        <li>Picks are refreshed every morning (Sydney time) with the latest team news, injuries and referee appointments.</li>
+        <li>Picks are refreshed every morning (Sydney time) with the latest team news, injuries and referee appointments from Sky Sports, club accounts and journalists on X, and football stats sites.</li>
+        <li>Tipsters' booking picks (Paddy Power, Betfair, bet365, Oddschecker, Racing Post and card tipsters on X) are checked too. When a tipster backs the same player, the pick says so. Tipsters are a second opinion, not a reason to bet on their own.</li>
         <li>About 45 minutes before each kick-off, once lineups are out, the picks for that game are checked again. Benched players are dropped and the game is marked "Lineups confirmed".</li>
         <li>Lineups land about an hour before kick-off. If your player is on the bench, think twice: a sub has far fewer minutes to get booked, though the bet stands if they come on.</li>
       </ul>
@@ -361,6 +362,7 @@ td.num, th.num { text-align: right; }
         <div class="price"><span class="label">Stake</span><b>${stake.toFixed(2)}u</b></div>
       </div>
       <p>${esc(b.reasoning)}</p>
+      ${b.tipsters?.length ? `<p class="small muted"><b>Also tipped by:</b> ${b.tipsters.map(t => t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.source)}</a>` : esc(t.source)).join(", ")}</p>` : ""}
       <div class="add">
         <div class="field"><label class="label" for="ao-${key}">Your odds</label><input id="ao-${key}" class="num" type="number" step="0.05" min="1.01" inputmode="decimal" value="${take.toFixed(2)}"></div>
         <div class="field"><label class="label" for="as-${key}">Stake (u)</label><input id="as-${key}" class="num" type="number" step="0.25" min="0" inputmode="decimal" value="${stake.toFixed(2)}"></div>
