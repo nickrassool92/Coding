@@ -312,9 +312,11 @@ td.num, th.num { text-align: right; }
   // ---------- render: this week's games ----------
   function renderGames() {
     const p = state.pack; if (!p) return;
-    $("mwTitle").textContent = `${p.matchweekLabel || "Matchweek " + p.matchweek} bets`;
+    const live = p.fixtures.filter(f => Date.now() - new Date(f.kickoffUtc) < 3 * 3600000);
+    const gw = live.length ? Math.min(...live.map(f => f.gw ?? p.matchweek)) : null;
+    $("mwTitle").textContent = gw ? `Gameweek ${gw} bets` : "This week's bets";
     $("asOf").textContent = `Updated ${ago(p.analysedAt || p.asOf + "T00:00:00")}`;
-    const fixtures = [...p.fixtures].filter(f => Date.now() - new Date(f.kickoffUtc) < 3 * 3600000).sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1);
+    const fixtures = live.filter(f => (f.gw ?? p.matchweek) === gw).sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1);
     const all = [];
     let html = "", lastDay = "";
     for (const f of fixtures) {
