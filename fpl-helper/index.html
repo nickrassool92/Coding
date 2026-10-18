@@ -1,0 +1,299 @@
+<title>Gaffer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;800&family=Source+Sans+3:wght@400;600;700&family=Roboto+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a manager's tactics board in one phone-width column. Deadline and plan up top, then the team sheet, captaincy, fixtures and chips. */
+:root {
+  --bg: #EEF1F5;
+  --surface: #FFFFFF;
+  --ink: #142033;
+  --muted: #5A6577;
+  --hair: #D3D9E2;
+  --board: #17324D;
+  --board-ink: #EAF1F8;
+  --accent: #0E8F7E;
+  --accent-soft: #D7F0EB;
+  --warn: #B26A00;
+  --warn-soft: #FBEBD2;
+  --bad: #C2362C;
+  --bad-soft: #F8E1DE;
+  --f1: #1E7F4F; --f2: #6CC08B; --f3: #C9CFD8; --f4: #E58A7B; --f5: #B3261E;
+  --focus: #2563EB;
+  --display: "Saira Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "Roboto Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0D141E; --surface: #162131; --ink: #E6ECF4; --muted: #95A2B5; --hair: #2A384B;
+    --board: #102740; --board-ink: #E6ECF4; --accent: #3CC7B0; --accent-soft: #123A36;
+    --warn: #E9A646; --warn-soft: #3A2C14; --bad: #F06A5F; --bad-soft: #3B1F1C;
+    --f1: #2FA36A; --f2: #5DB07E; --f3: #4A5668; --f4: #C9705F; --f5: #E0473C; --focus: #7AA7FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0D141E; --surface: #162131; --ink: #E6ECF4; --muted: #95A2B5; --hair: #2A384B;
+  --board: #102740; --board-ink: #E6ECF4; --accent: #3CC7B0; --accent-soft: #123A36;
+  --warn: #E9A646; --warn-soft: #3A2C14; --bad: #F06A5F; --bad-soft: #3B1F1C;
+  --f1: #2FA36A; --f2: #5DB07E; --f3: #4A5668; --f4: #C9705F; --f5: #E0473C; --focus: #7AA7FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px 48px;
+}
+.app { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; font-weight: 800; letter-spacing: 0.01em; text-wrap: balance; }
+h1 { font-size: 2.2rem; line-height: 1; text-transform: uppercase; }
+h2 { font-size: 1.45rem; line-height: 1.1; }
+h3 { font-size: 1.15rem; }
+p { margin: 0; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; gap: 12px; align-items: center; }
+.whistle { width: 40px; height: 40px; border-radius: 10px; background: var(--board); display: grid; place-items: center; }
+.whistle span { width: 18px; height: 18px; border: 3px solid var(--board-ink); border-radius: 50%; position: relative; }
+.whistle span::after { content: ""; position: absolute; width: 3px; height: 3px; background: var(--board-ink); border-radius: 50%; left: 4.5px; top: 4.5px; }
+.sub { font-size: 0.9rem; color: var(--muted); }
+
+.board { background: var(--board); color: var(--board-ink); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.board .label { color: color-mix(in srgb, var(--board-ink) 70%, transparent); }
+.board b { font-family: var(--mono); font-size: 1.2rem; display: block; }
+.board .deadline { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid color-mix(in srgb, var(--board-ink) 20%, transparent); padding-bottom: 10px; }
+.board .deadline b { font-size: 1.5rem; }
+@media (max-width: 460px) { .board { grid-template-columns: 1fr 1fr; } }
+
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+
+.seg { display: inline-flex; background: var(--bg); border: 1px solid var(--hair); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 999px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+.verdict { border-radius: 10px; padding: 10px 12px; font-weight: 600; }
+.verdict.go { background: var(--accent-soft); color: var(--accent); }
+.verdict.hold { background: var(--warn-soft); color: var(--warn); }
+.verdict.bad { background: var(--bad-soft); color: var(--bad); }
+
+.move { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; }
+.move .side { min-width: 0; display: flex; flex-direction: column; }
+.move .side b { font-weight: 700; }
+.move .in { text-align: right; }
+.move .arrow { font-family: var(--mono); color: var(--accent); font-weight: 700; }
+.move .why { grid-column: 1 / -1; font-size: 0.88rem; color: var(--muted); border-top: 1px dashed var(--hair); padding-top: 8px; }
+.out-name { color: var(--bad); }
+.in-name { color: var(--accent); }
+
+.sheet { display: flex; flex-direction: column; gap: 6px; }
+.line { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.pl { background: var(--bg); border: 1px solid var(--hair); border-radius: 10px; padding: 6px 8px; min-width: 96px; flex: 1 1 96px; max-width: 140px; text-align: center; position: relative; }
+.pl b { display: block; font-weight: 700; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl .meta { font-size: 0.75rem; color: var(--muted); }
+.pl .xp { font-family: var(--mono); font-weight: 700; font-size: 0.95rem; }
+.pl.new { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.badge { position: absolute; top: -8px; right: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; font-weight: 800; background: var(--ink); color: var(--bg); }
+.flag { position: absolute; top: -8px; left: -6px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; display: grid; place-items: center; font-size: 0.68rem; font-weight: 800; background: var(--warn); color: var(--surface); }
+.flag.out { background: var(--bad); }
+.bench { border-top: 1px dashed var(--hair); padding-top: 10px; }
+
+.caps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cap { border: 1px solid var(--hair); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+.cap:first-child { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.cap b { font-family: var(--mono); font-size: 1.2rem; }
+
+.tablewrap { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 0 4px; width: 100%; font-size: 0.85rem; }
+th { text-align: left; font-weight: 700; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 6px; }
+td { padding: 0 6px; white-space: nowrap; }
+td.fx { padding: 0 2px; }
+.chip { display: block; text-align: center; border-radius: 6px; padding: 4px 4px; font-weight: 700; font-size: 0.78rem; min-width: 52px; }
+.d1 { background: var(--f1); color: #fff; } .d2 { background: var(--f2); color: #0B2416; } .d3 { background: var(--f3); color: var(--ink); }
+.d4 { background: var(--f4); color: #2B0D08; } .d5 { background: var(--f5); color: #fff; } .d0 { background: transparent; color: var(--muted); border: 1px dashed var(--hair); }
+
+.ideas { display: flex; flex-direction: column; gap: 6px; }
+.idea { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; border-bottom: 1px solid var(--hair); padding-bottom: 6px; flex-wrap: wrap; }
+.chipsgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chipcard { border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.empty { border: 1px dashed var(--hair); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
+.foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+@media (max-width: 460px) { .caps { grid-template-columns: 1fr; } .chipsgrid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="whistle" aria-hidden="true"><span></span></div>
+      <div><h1>Gaffer</h1><p class="sub" id="teamLine">Your Fantasy Premier League assistant</p></div>
+    </div>
+    <span class="small muted" id="updated"></span>
+  </header>
+
+  <section class="board" id="board" aria-label="Summary">
+    <div class="deadline"><div><span class="label" id="dlLabel">Next deadline</span><b id="dlTime">–</b></div><span class="num" id="dlLeft"></span></div>
+    <div><span class="label">Bank</span><b id="bBank">–</b></div>
+    <div><span class="label">Free transfers</span><b id="bFt">–</b></div>
+    <div><span class="label">Overall rank</span><b id="bRank">–</b></div>
+    <div><span class="label">Chips left</span><b id="bChips" style="font-size:1rem">–</b></div>
+  </section>
+
+  <div id="main"><div class="empty">Loading your team…</div></div>
+
+  <p class="foot">Projections use the official Fantasy Premier League data and fixture difficulty. They are estimates, not guarantees.</p>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const CHIP = { bboost: "Bench Boost", "3xc": "Triple Captain", wildcard: "Wildcard", freehit: "Free Hit" };
+  const HIT = 4;
+  let data = null, chosen = null, timer = null;
+
+  function fmtDeadline(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" }) + ", " + d.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+  }
+  function left(iso) {
+    const ms = new Date(iso) - Date.now();
+    if (ms <= 0) return "Deadline passed";
+    const h = Math.floor(ms / 3600000), m = Math.floor(ms % 3600000 / 60000);
+    return h >= 48 ? `${Math.floor(h / 24)} days ${h % 24} h to go` : `${h} h ${m} min to go`;
+  }
+  const fx = (list) => list.length ? list.map(f => `${f.opp} (${f.home ? "H" : "A"})`).join(", ") : "No game";
+
+  // Best plan for a given number of free transfers: the most transfers whose extra points beat any hits.
+  function recommended(ft) {
+    let best = data.plans[0], bestNet = 0;
+    for (const pl of data.plans) {
+      const hits = Math.max(0, pl.transfers - ft) * HIT;
+      const net = pl.gain - hits;
+      if (net > bestNet + 1.5) { best = pl; bestNet = net; }
+    }
+    return best;
+  }
+
+  function render() {
+    if (!data) return;
+    const d = data;
+    $("teamLine").textContent = `${d.team_name} · ${d.manager}`;
+    $("updated").textContent = "Updated " + new Date(d.updatedAt).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit" });
+    $("dlLabel").textContent = `Gameweek ${d.next_gw} deadline`;
+    $("dlTime").textContent = fmtDeadline(d.deadline);
+    const tick = () => { $("dlLeft").textContent = left(d.deadline); };
+    tick(); clearInterval(timer); timer = setInterval(tick, 30000);
+    $("bBank").textContent = `£${d.bank.toFixed(1)}m`;
+    $("bFt").textContent = String(d.free_transfers_estimate);
+    $("bRank").textContent = d.overall_rank ? d.overall_rank.toLocaleString("en-AU") : "–";
+    $("bChips").textContent = d.chips_left.length ? d.chips_left.map(c => CHIP[c] || c).join(", ") : "None";
+
+    const ft = chosen ?? d.free_transfers_estimate;
+    const rec = recommended(ft);
+    const maxPlan = d.plans.length - 1;
+
+    // Transfer plan
+    const options = [0, 1, 2, 3].filter(n => n <= maxPlan);
+    const hits = Math.max(0, rec.transfers - ft) * HIT;
+    const net = rec.gain - hits;
+    let verdict;
+    if (!rec.transfers) verdict = `<div class="verdict hold">Roll your transfer${ft > 1 ? "s" : ""}. No move adds enough points over the next ${d.gws.length} gameweeks to be worth it.</div>`;
+    else verdict = `<div class="verdict go">Make ${rec.transfers} transfer${rec.transfers > 1 ? "s" : ""}: about +${net.toFixed(1)} points over the next ${d.gws.length} gameweeks${hits ? ` after a −${hits} hit` : ""}.</div>`;
+    const moves = rec.moves.map(m => `
+      <div class="move">
+        <div class="side"><span class="label">Sell</span><b class="out-name">${esc(m.out.name)}</b><span class="small muted">${esc(m.out.team)} · £${(m.out.sell ?? m.out.price).toFixed(1)}m</span></div>
+        <span class="arrow" aria-hidden="true">→</span>
+        <div class="side in"><span class="label">Buy</span><b class="in-name">${esc(m.in.name)}</b><span class="small muted">${esc(m.in.team)} · £${m.in.price.toFixed(1)}m</span></div>
+        <p class="why">${esc(m.in.name)} projects ${m.in.xp5} points over the next ${d.gws.length} gameweeks against ${m.out.xp5} for ${esc(m.out.name)}, and has ${m.in.total} points so far (form ${m.in.form}). Next games: ${esc(m.in.fixtures.slice(0, 3).map(fx).join("; "))}.${m.alternatives.length ? ` Also good: ${m.alternatives.map(a => `${esc(a.in.name)} (${esc(a.in.team)}, £${a.in.price.toFixed(1)}m)`).join(", ")}.` : ""}</p>
+      </div>`).join("");
+
+    // Team sheet for the recommended plan
+    const newIds = new Set(rec.moves.map(m => m.in.id));
+    const card = (p, isBench) => {
+      const flag = p.status === "a" && (p.chance == null || p.chance >= 100) ? "" :
+        `<span class="flag ${p.status === "i" || p.status === "s" || p.chance === 0 ? "out" : ""}" title="${esc(p.news)}">${p.chance == null ? "!" : p.chance + "%"}</span>`;
+      const cap = p.name === rec.captain ? `<span class="badge" aria-label="Captain">C</span>` : p.name === rec.vice ? `<span class="badge" aria-label="Vice-captain">V</span>` : "";
+      return `<div class="pl ${newIds.has(p.id) ? "new" : ""}">${flag}${cap}<b>${esc(p.name)}</b><span class="meta">${esc(fx(p.fixtures[0]))}</span><span class="xp">${p.xp[0].toFixed(1)}</span></div>`;
+    };
+    const rows = ["GKP", "DEF", "MID", "FWD"].map(pos => `<div class="line">${rec.xi.filter(p => p.pos === pos).map(p => card(p)).join("")}</div>`).join("");
+    const bench = `<div class="bench"><span class="label">Bench, in order</span><div class="line" style="margin-top:8px">${rec.bench.map(p => card(p, true)).join("")}</div></div>`;
+    const flagged = [...rec.xi, ...rec.bench].filter(p => p.news);
+    const notes = flagged.length ? `<p class="small muted"><b>Team news:</b> ${flagged.map(p => `${esc(p.name)}: ${esc(p.news)}`).join(" · ")}</p>` : "";
+
+    // Captaincy
+    const caps = [...rec.xi].sort((a, b) => b.xp[0] - a.xp[0]).slice(0, 3);
+    const capHtml = caps.map((p, i) => `<div class="cap"><span class="label">${i === 0 ? "Captain" : i === 1 ? "Vice-captain" : "Next best"}</span><h3>${esc(p.name)}</h3><span class="small muted">${esc(fx(p.fixtures[0]))}</span><b>${(p.xp[0] * (i === 0 ? 2 : 1)).toFixed(1)}${i === 0 ? ` <span class="small muted">(${p.xp[0].toFixed(1)} × 2)</span>` : ""}</b></div>`).join("");
+
+    // Fixture ticker for the squad after the plan
+    const squad = [...rec.xi, ...rec.bench];
+    const posOrder = { GKP: 0, DEF: 1, MID: 2, FWD: 3 };
+    const ticker = `<table><thead><tr><th>Player</th>${d.gws.map(g => `<th>GW${g}</th>`).join("")}</tr></thead><tbody>` +
+      [...squad].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]).map(p => `<tr><td><b>${esc(p.name)}</b> <span class="muted small">${esc(p.team)}</span></td>${p.fixtures.map(list => `<td class="fx">${list.length ? list.map(f => `<span class="chip d${f.fdr}">${esc(f.opp)} ${f.home ? "H" : "A"}</span>`).join("") : `<span class="chip d0">–</span>`}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+
+    // Other single-transfer ideas
+    const ideas = d.ideas.map(i => `<div class="idea"><span><b class="out-name">${esc(i.out.name)}</b> → <b class="in-name">${esc(i.in.name)}</b> <span class="muted small">${esc(i.in.team)} · £${i.in.price.toFixed(1)}m</span></span><span class="num small">+${i.gain.toFixed(1)} pts</span></div>`).join("");
+
+    // Chips
+    const cv = Object.entries(d.chip_view).map(([g, v]) => ({ g: Number(g), ...v }));
+    const bestTc = [...cv].sort((a, b) => b.captain_xp - a.captain_xp)[0];
+    const bestBb = [...cv].sort((a, b) => b.bench_xp - a.bench_xp)[0];
+    const chipCards = [];
+    if (d.chips_left.includes("3xc") && bestTc) chipCards.push(`<div class="chipcard"><span class="label">Triple Captain</span><p>Best window in the next ${d.gws.length}: <b>Gameweek ${bestTc.g}</b>, ${esc(bestTc.captain)} at about ${bestTc.captain_xp.toFixed(1)} points. Hold it for a double gameweek if one is announced before Gameweek 19.</p></div>`);
+    if (d.chips_left.includes("bboost") && bestBb) chipCards.push(`<div class="chipcard"><span class="label">Bench Boost</span><p>Your bench projects ${bestBb.bench_xp.toFixed(1)} points at best (Gameweek ${bestBb.g}). Strengthen the bench first, ideally for a double gameweek.</p></div>`);
+
+    $("main").innerHTML = `
+      <section class="panel">
+        <div class="head"><h2>Gameweek ${d.next_gw} transfers</h2>
+          <div class="seg" role="group" aria-label="Free transfers you have">${[1, 2, 3, 4, 5].map(n => `<button data-ft="${n}" aria-pressed="${n === ft}">${n}</button>`).join("")}</div>
+        </div>
+        <p class="small muted">Free transfers: ${chosen == null ? `about ${d.free_transfers_estimate}, worked out from your history. Tap the right number if it is different.` : `set to ${ft}.`}</p>
+        ${verdict}
+        ${moves}
+        ${rec.transfers ? `<p class="small muted">Money left after: £${(rec.bank ?? d.bank).toFixed(1)}m</p>` : ""}
+      </section>
+      <section class="panel">
+        <div class="head"><h2>Your team for Gameweek ${d.next_gw}</h2><span class="small muted">${esc(rec.formation)} · about ${rec.xp.toFixed(0)} pts</span></div>
+        <p class="small muted">Numbers are projected points this gameweek. Green outline means a new signing.</p>
+        <div class="sheet">${rows}</div>
+        ${bench}
+        ${notes}
+      </section>
+      <section class="panel">
+        <h2>Captain</h2>
+        <div class="caps">${capHtml}</div>
+      </section>
+      <section class="panel">
+        <div class="head"><h2>Fixtures</h2><span class="small muted">Green is easy, red is hard</span></div>
+        <div class="tablewrap">${ticker}</div>
+      </section>
+      <section class="panel">
+        <h2>Other transfer ideas</h2>
+        <p class="small muted">The best single move for each player you could sell, scored over the next ${d.gws.length} gameweeks.</p>
+        <div class="ideas">${ideas}</div>
+      </section>
+      ${chipCards.length ? `<section class="panel"><h2>Chips</h2><div class="chipsgrid">${chipCards.join("")}</div></section>` : ""}`;
+    for (const b of $("main").querySelectorAll("[data-ft]")) b.onclick = () => { chosen = Number(b.dataset.ft); try { localStorage.setItem("gaffer-ft-" + d.next_gw, String(chosen)); } catch {} render(); };
+  }
+
+  (async () => {
+    const C = window.claude;
+    const db = await Promise.resolve(C?.use("db")).catch(() => null);
+    if (!db) { $("main").innerHTML = `<div class="empty">Sign in to Claude to load your team.</div>`; return; }
+    db.doc("teams/853712").onSnapshot(snap => {
+      if (!snap.exists) { $("main").innerHTML = `<div class="empty">Your team hasn't been loaded yet. It refreshes every day.</div>`; return; }
+      data = snap.data();
+      try { const v = localStorage.getItem("gaffer-ft-" + data.next_gw); chosen = v ? Number(v) : null; } catch {}
+      render();
+    }, () => { $("main").innerHTML = `<div class="empty">Couldn't load your team. Reload to try again.</div>`; });
+  })();
+})();
+</script>
