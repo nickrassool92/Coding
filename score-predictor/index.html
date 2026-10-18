@@ -123,7 +123,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
     <p class="small muted">1.00 is league average. Attack above 1 scores more than average; defence below 1 concedes less. Built from expected goals this season, blended with last season while the sample is small.</p>
     <div class="tablewrap"><table id="ratings"></table></div>
   </section>
-  <p class="foot">Predictions are estimates from expected goals and team news, not certainties.</p>
+  <p class="foot" id="method">Predictions are estimates from expected goals and team news, not certainties.</p>
 </div>
 
 <script>
@@ -133,6 +133,9 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
   const pct = x => Math.round(x * 100) + "%";
 
   function render(d) {
+    $("method").textContent = d.market_note && /priced/.test(d.market_note)
+      ? `Predictions blend the stats model (${Math.round((1 - d.market_weight) * 100)}%) with Australian bookmakers' odds (${Math.round(d.market_weight * 100)}%). They are estimates, not certainties.`
+      : "Predictions are estimates from expected goals and team news, not certainties.";
     $("updated").textContent = "Updated " + new Date(d.updatedAt).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit" });
     // Show one gameweek at a time: the earliest with a game still to finish.
     const open = d.games.filter(g => !g.finished);
@@ -184,6 +187,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
           <span class="chip">Over 2.5 goals ${pct(p.over25)}</span>
           <span class="chip">Clean sheet ${esc(g.home_short)} ${pct(p.clean_sheet[0])} · ${esc(g.away_short)} ${pct(p.clean_sheet[1])}</span>
         </div>
+        ${p.market ? (() => {
+          const mk = p.market, md = p.model || pr, gap = Math.max(...["home", "draw", "away"].map(k => Math.abs(md[k] - mk[k])));
+          const sb = mk.sportsbet ? ` · Sportsbet $${mk.sportsbet.home.toFixed(2)} / $${mk.sportsbet.draw.toFixed(2)} / $${mk.sportsbet.away.toFixed(2)}` : "";
+          return `<p class="small muted">Bookmakers ${pct(mk.home)} / ${pct(mk.draw)} / ${pct(mk.away)} (${mk.books} Australian books)${esc(sb)}. Stats model alone ${pct(md.home)} / ${pct(md.draw)} / ${pct(md.away)}.</p>` +
+            (gap >= 0.10 ? `<span class="chip close">Model and bookmakers disagree by ${Math.round(gap * 100)} points</span>` : "");
+        })() : ""}
         <p class="small muted">Other likely scores: ${esc(others)}</p>
         ${abs.length ? `<p class="absent">Missing: ${abs.join(", ")}</p>` : ""}
         ${status}

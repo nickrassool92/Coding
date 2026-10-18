@@ -10,6 +10,7 @@ which fits PARAMS on whole seasons of past games.
 """
 import json
 import math
+import os
 import sys
 import time
 import urllib.request
@@ -30,6 +31,10 @@ PARAMS = {
     "rho": 0.0,            # Dixon-Coles correction for 0-0, 1-0, 0-1 and 1-1
     "draw_boost": 0.2,     # extra weight on every drawn score, then renormalised (draws were underrated)
 }
+# Market odds: blended with the model when ODDS_API_KEY is set (The Odds API, Australian bookmakers).
+# The weight is not backtested (past odds need a paid plan); markets are usually the stronger signal.
+MARKET_WEIGHT = 0.65
+ODDS_URL = "https://api.the-odds-api.com/v4/sports/soccer_epl/odds/?regions=au&markets=h2h&oddsFormat=decimal&apiKey="
 ALIASES = {"AFC Bournemouth": "Bournemouth", "Brighton & Hove Albion": "Brighton", "Leeds United": "Leeds",
            "Manchester City": "Man City", "Manchester United": "Man Utd", "Newcastle United": "Newcastle",
            "Nottingham Forest": "Nott'm Forest", "Tottenham Hotspur": "Spurs"}
@@ -168,6 +173,65 @@ def season_matches(lg, cache):
     return out
 
 
+def norm_team(name):
+    n = name.lower().replace("&", "and").replace("afc ", "").replace(" fc", "")
+    for a, b in (("brighton and hove albion", "brighton"), ("tottenham hotspur", "spurs"), ("tottenham", "spurs"),
+                 ("manchester united", "man utd"), ("manchester city", "man city"), ("nottingham forest", "nott'm forest"),
+                 ("newcastle united", "newcastle"), ("leeds united", "leeds"), ("wolverhampton wanderers", "wolves"),
+                 ("west ham united", "west ham"), ("ipswich town", "ipswich"), ("hull city", "hull"), ("coventry city", "coventry")):
+        if n == a:
+            n = b
+    return n.replace(" town", "").replace(" city", "") if n not in ("man city",) else n
+
+
+def market_odds():
+    """Average no-margin win/draw/loss chances across Australian bookmakers, keyed by normalised
+    (home, away), plus Sportsbet's own prices when it lists the game. Empty without a key."""
+    key = os.environ.get("ODDS_API_KEY")
+    if not key:
+        return {}, "no key"
+    try:
+        events = get(ODDS_URL + key)
+    except Exception as e:
+        return {}, f"odds request failed: {e}"
+    out = {}
+    for ev in events:
+        h, a = ev["home_team"], ev["away_team"]
+        probs, sportsbet = [], None
+        for bk in ev.get("bookmakers", []):
+            mk = next((m for m in bk.get("markets", []) if m["key"] == "h2h"), None)
+            if not mk:
+                continue
+            price = {o["name"]: o["price"] for o in mk["outcomes"]}
+            if h not in price or a not in price or "Draw" not in price:
+                continue
+            inv = [1 / price[h], 1 / price["Draw"], 1 / price[a]]
+            probs.append([x / sum(inv) for x in inv])
+            if bk["key"] == "sportsbet":
+                sportsbet = {"home": price[h], "draw": price["Draw"], "away": price[a]}
+        if probs:
+            avg = [sum(p[i] for p in probs) / len(probs) for i in range(3)]
+            out[(norm_team(h), norm_team(a))] = {"home": avg[0], "draw": avg[1], "away": avg[2],
+                                                  "books": len(probs), "sportsbet": sportsbet}
+    return out, f"{len(out)} games priced"
+
+
+def fit_to_probs(lh, la, target, p):
+    """Expected goals close to the model's that reproduce the target home and away win chances,
+    so the scoreline, both-teams-to-score and over/under figures agree with the blended odds."""
+    total = lh + la
+    best = None
+    for t in [total * (0.8 + 0.02 * k) for k in range(21)]:
+        for k in range(1, 100):
+            share = k / 100
+            h, a = t * share, t * (1 - share)
+            ph, pd, pa, _, _ = outcome(score_matrix(h, a, p))
+            err = (ph - target[0]) ** 2 + (pa - target[2]) ** 2 + 0.1 * ((t - total) / total) ** 2
+            if best is None or err < best[0]:
+                best = (err, h, a)
+    return best[1], best[2]
+
+
 def main(out_path, prev_path=None):
     prev_doc = {}
     if prev_path:
@@ -218,6 +282,7 @@ def main(out_path, prev_path=None):
     now = datetime.now(timezone.utc)
     now_s = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     rating_now = team_ratings(clubs, matches, prior, now_s, p)
+    market, market_note = market_odds()
 
     games = []
     for f in fixtures:
@@ -230,6 +295,9 @@ def main(out_path, prev_path=None):
                 "home_short": teams[h]["short_name"], "away_short": teams[a]["short_name"],
                 "finished": bool(f["finished_provisional"]),
                 "result": [f["team_h_score"], f["team_a_score"]] if f["team_h_score"] is not None else None}
+        if f["id"] in prev and (prev[f["id"]].get("pred") or {}).get("locked"):
+            games.append({**base, "pred": prev[f["id"]]["pred"]})  # a published test pick, kept as announced
+            continue
         if started and f["id"] in prev and prev[f["id"]].get("pred"):
             games.append({**base, "pred": prev[f["id"]]["pred"]})
             continue
@@ -241,6 +309,11 @@ def main(out_path, prev_path=None):
             games.append({**base, "pred": None})
             continue
         lh, la = expected_goals(rating_now, fm_name[h], fm_name[a], p, attack_factor(h), attack_factor(a))
+        mh, md, ma, _, _ = outcome(score_matrix(lh, la, p))
+        mk = market.get((norm_team(teams[h]["name"]), norm_team(teams[a]["name"])))
+        if mk:
+            target = [MARKET_WEIGHT * mk[k] + (1 - MARKET_WEIGHT) * v for k, v in (("home", mh), ("draw", md), ("away", ma))]
+            lh, la = fit_to_probs(lh, la, target, p)
         m = score_matrix(lh, la, p)
         ph, pd, pa, pick, cells = outcome(m)
         btts = sum(m[i][j] for i in range(1, MAX_GOALS + 1) for j in range(1, MAX_GOALS + 1))
@@ -255,6 +328,9 @@ def main(out_path, prev_path=None):
             "absences": {
                 "home": [{"name": n, "news": nw} for n, mi, s, nw in absent.get(h, []) if mi >= 0.5],
                 "away": [{"name": n, "news": nw} for n, mi, s, nw in absent.get(a, []) if mi >= 0.5]},
+            "model": {"home": round(mh, 3), "draw": round(md, 3), "away": round(ma, 3)},
+            "market": ({"home": round(mk["home"], 3), "draw": round(mk["draw"], 3), "away": round(mk["away"], 3),
+                        "books": mk["books"], "sportsbet": mk["sportsbet"]} if mk else None),
             "made": now_s}})
 
     # Track record: every finished game this season that had a pre-match prediction.
@@ -274,6 +350,8 @@ def main(out_path, prev_path=None):
         "backtest": prev_doc.get("backtest"),
         "season": season,
         "params": p,
+        "market_weight": MARKET_WEIGHT,
+        "market_note": market_note,
         "updatedAt": now_s,
         "ratings": {short[c]: {"attack": round(r["for"] / avg, 2), "defence": round(r["against"] / avg, 2)} for c, r in rating_now.items()},
         "games": sorted(games, key=lambda g: (g["kickoff"] or "", g["id"])),
