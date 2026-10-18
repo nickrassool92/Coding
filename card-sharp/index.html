@@ -147,6 +147,17 @@ table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
 th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
 td.num, th.num { text-align: right; }
 .foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.games { display: flex; flex-direction: column; gap: 22px; }
+.dayhead { font-family: var(--display); font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+.game { gap: 12px; }
+.game-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
+.game-meta b { color: var(--ink); font-weight: 600; }
+.outlook { font-size: 0.95rem; }
+.absent { font-size: 0.82rem; color: var(--muted); }
+.picks { display: flex; flex-direction: column; gap: 10px; }
+.best { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.best a { color: var(--ink); font-weight: 700; }
+.best span { color: var(--muted); font-size: 0.88rem; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -169,49 +180,14 @@ td.num, th.num { text-align: right; }
   <!-- BETS -->
   <section id="view-bets" class="app" style="gap:18px">
     <div class="mwline">
-      <h2 id="mwTitle">This week's fixtures</h2>
+      <h2 id="mwTitle">This week's bets</h2>
       <span id="asOf" class="small muted"></span>
     </div>
-    <div id="days" class="days"><div class="empty">Loading this week's fixtures…</div></div>
-
-    <div id="match" class="panel" hidden>
-      <div>
-        <h2 id="mName"></h2>
-        <div class="meta" style="margin-top:6px">
-          <span id="mKick" class="muted"></span>
-          <label class="muted" for="refSel">Referee</label>
-          <select id="refSel"></select>
-        </div>
-      </div>
-      <div id="otherFields" class="row2" hidden>
-        <div class="field"><label class="label" for="oHome">Home team</label><input id="oHome" placeholder="e.g. Everton"></div>
-        <div class="field"><label class="label" for="oAway">Away team</label><input id="oAway" placeholder="e.g. Liverpool"></div>
-      </div>
-      <div class="facts">
-        <div class="fact"><span class="label">Referee</span><b id="fRef">–</b><span id="fRefN">yellows per game</span></div>
-        <div class="fact"><span class="label" id="fHomeL">Home</span><b id="fHome">–</b><span>team yellows per game</span></div>
-        <div class="fact"><span class="label" id="fAwayL">Away</span><b id="fAway">–</b><span>team yellows per game</span></div>
-      </div>
-      <div id="bookedWrap" class="field">
-        <span class="label">Booked this season</span>
-        <div id="booked" class="booked"></div>
-      </div>
-      <div class="field">
-        <label class="label" for="oddsIn">Sportsbet odds (paste from the Player to be carded market)</label>
-        <textarea id="oddsIn" placeholder="Caicedo 2.60&#10;Romero 2.75&#10;Bentancur 3.25"></textarea>
-      </div>
-      <div class="field">
-        <label class="label" for="newsIn">Team news or confirmed lineups (optional)</label>
-        <textarea id="newsIn" placeholder="Paste lineups once they drop, about an hour before kick-off. Injuries and suspensions help too."></textarea>
-      </div>
-      <div class="actions">
-        <button id="goBtn" class="btn yellow">Find bets</button>
-        <button id="stopBtn" class="btn ghost" hidden>Stop</button>
-        <span id="status" class="status"></span>
-      </div>
+    <div id="best" class="panel" hidden>
+      <span class="label">Strongest picks this round</span>
+      <ol id="bestList" class="best"></ol>
     </div>
-
-    <div id="results" class="results"></div>
+    <div id="games" class="games"><div class="empty">Loading this week's bets…</div></div>
   </section>
 
   <!-- TRACKER -->
@@ -235,10 +211,10 @@ td.num, th.num { text-align: right; }
     <div class="panel prose">
       <h2>How the analyst works</h2>
       <p>Each pick weighs the player's booking rate, expected minutes, the opponent they'll be up against, the referee, and how the match is likely to play out. Teams without the ball foul more, and derbies and relegation fights run hot.</p>
-      <p>The chance it gives is turned into a fair price. A bet is only worth it when Sportsbet pays more than that. Stakes are quarter Kelly on a 100-unit bank, capped at 3 units.</p>
+      <p>Each pick's chance is turned into a fair price. <b>Take at</b> is the lowest Sportsbet price that still gives at least a 5% edge. If Sportsbet is offering less, skip the bet. Stakes are quarter Kelly on a 100-unit bank, capped at 3 units, and go up when you enter a bigger price.</p>
       <ul>
-        <li><b>Paste the Sportsbet odds</b> so it can find real value. Without them you get a minimum price to take.</li>
-        <li><b>Paste the lineups</b> when they drop. A bench player is the biggest risk in this market.</li>
+        <li>Picks are refreshed every Tuesday, once referees are announced, and every Friday with the latest team news.</li>
+        <li>Lineups land about an hour before kick-off. If your player is on the bench, think twice: a sub has far fewer minutes to get booked, though the bet stands if they come on.</li>
       </ul>
     </div>
     <div class="panel prose">
@@ -277,8 +253,8 @@ td.num, th.num { text-align: right; }
   const price = n => "$" + n.toFixed(2);
   const BANK = 100, KELLY = 0.25, MAX_STAKE = 3, MIN_EDGE = 0.05;
 
-  const state = { pack: null, sel: null, refOverride: {}, bets: {}, unit: 10, last: null };
-  let db = null, base = null, sample = null, ctl = null;
+  const state = { pack: null, bets: {}, unit: 10 };
+  let db = null, base = null;
 
   // ---------- storage: private bets in db, localStorage fallback ----------
   const LS = "cardsharp-v1";
@@ -294,8 +270,6 @@ td.num, th.num { text-align: right; }
   const saveBet = id => write("bet-" + id, state.bets[id] || null);
   const saveSettings = () => write("settings", { unit: state.unit });
   const setSync = t => { $("sync").textContent = t; };
-  try { const v = JSON.parse(localStorage.getItem("cardsharp-refs") || "{}"); state.refOverride = v || {}; } catch {}
-  const saveRefs = () => { try { localStorage.setItem("cardsharp-refs", JSON.stringify(state.refOverride)); } catch {} };
 
   // ---------- tabs ----------
   function showTab(name) {
@@ -307,8 +281,6 @@ td.num, th.num { text-align: right; }
 
   // ---------- pack helpers ----------
   const P = () => state.pack || { fixtures: [], referees: {}, teams: {}, players: [] };
-  const fixtureById = id => P().fixtures.find(f => f.id === id);
-  function refFor(f) { return f ? (state.refOverride[f.id] ?? f.referee ?? "") : (state.refOverride.other ?? ""); }
   function refRate(name) { const r = P().referees[name]; return r && r.games ? (r.yellows / r.games) : null; }
   function teamRate(name) { const t = P().teams[name]; return t && t.ypg != null ? t.ypg : null; }
   function kickText(f) {
@@ -317,113 +289,6 @@ td.num, th.num { text-align: right; }
     const time = d.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
     return f.kickoffTbc ? `${day} · time TBC` : `${day} · ${time}`;
   }
-  function currentMatch() {
-    if (state.sel === "other") return { id: "other", home: $("oHome").value.trim(), away: $("oAway").value.trim(), kickoffUtc: null, other: true };
-    return fixtureById(state.sel);
-  }
-
-  // ---------- render: fixtures ----------
-  function renderFixtures() {
-    const p = state.pack;
-    if (!p) return;
-    $("mwTitle").textContent = `Matchweek ${p.matchweek}`;
-    $("asOf").textContent = `Data as of ${new Date(p.asOf + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long" })}`;
-    const groups = {};
-    for (const f of [...p.fixtures].sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1)) {
-      const key = new Date(f.kickoffUtc).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
-      (groups[key] = groups[key] || []).push(f);
-    }
-    let html = "";
-    for (const [day, list] of Object.entries(groups)) {
-      html += `<div class="day"><span class="label">${esc(day)}</span><div class="fx-grid">`;
-      for (const f of list) {
-        const ref = refFor(f);
-        const t = new Date(f.kickoffUtc).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
-        html += `<button class="fx" data-fx="${esc(f.id)}" aria-pressed="${state.sel === f.id}"><b>${esc(f.home)} v ${esc(f.away)}</b><span>${f.kickoffTbc ? "Time TBC" : esc(t)} · ${ref ? esc(ref) : "Ref TBC"}</span></button>`;
-      }
-      html += `</div></div>`;
-    }
-    html += `<div class="fx-grid"><button class="fx other" data-fx="other" aria-pressed="${state.sel === "other"}"><b>Another match</b><span>Type in any Premier League fixture</span></button></div>`;
-    $("days").innerHTML = html;
-    for (const b of $("days").querySelectorAll("[data-fx]")) b.onclick = () => selectFixture(b.dataset.fx);
-  }
-
-  function selectFixture(id) {
-    if (state.sel !== id) { $("oddsIn").value = ""; $("newsIn").value = ""; $("results").innerHTML = ""; state.last = null; }
-    state.sel = id;
-    renderFixtures(); renderMatch();
-    $("match").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-  }
-
-  // ---------- render: match sheet ----------
-  function renderMatch() {
-    const m = currentMatch();
-    $("match").hidden = !m;
-    if (!m) return;
-    const other = !!m.other;
-    $("otherFields").hidden = !other;
-    $("mName").textContent = other ? (m.home && m.away ? `${m.home} v ${m.away}` : "Another match") : `${m.home} v ${m.away}`;
-    $("mKick").textContent = other ? "" : kickText(m);
-    const ref = refFor(other ? null : m);
-    const names = Object.keys(P().referees).sort();
-    $("refSel").innerHTML = `<option value="">Not announced yet</option>` + names.map(n => `<option ${n === ref ? "selected" : ""}>${esc(n)}</option>`).join("");
-    const rr = refRate(ref), r = P().referees[ref]?.games ? P().referees[ref] : null;
-    $("fRef").textContent = rr != null ? rr.toFixed(1) : "–";
-    $("fRefN").textContent = r ? `${r.yellows} yellows in ${r.games} games` : ref ? "no data yet" : "pick the referee";
-    $("fHomeL").textContent = m.home || "Home"; $("fAwayL").textContent = m.away || "Away";
-    const hr = teamRate(m.home), ar = teamRate(m.away);
-    $("fHome").textContent = hr != null ? hr.toFixed(2) : "–";
-    $("fAway").textContent = ar != null ? ar.toFixed(2) : "–";
-    const booked = P().players.filter(pl => pl.team === m.home || pl.team === m.away).sort((a, b) => b.yellows - a.yellows);
-    $("bookedWrap").hidden = !booked.length;
-    $("booked").innerHTML = booked.map(pl => `<span class="chip"><i></i>${esc(pl.name)} <span class="num">${pl.yellows}</span></span>`).join("");
-    $("goBtn").disabled = !sample || (other && !(m.home && m.away));
-    if (!sample) setStatus("Bet analysis needs Claude. Open this page in the Claude app or on claude.ai.", true);
-  }
-  $("refSel").onchange = () => {
-    const key = state.sel === "other" ? "other" : state.sel;
-    state.refOverride[key] = $("refSel").value; saveRefs();
-    renderFixtures(); renderMatch();
-  };
-  $("oHome").oninput = $("oAway").oninput = () => renderMatch();
-  function setStatus(t, err) { $("status").textContent = t; $("status").className = "status" + (err ? " err" : ""); }
-
-  // ---------- analysis ----------
-  function buildPrompt(m) {
-    const p = P();
-    const ref = refFor(m.other ? null : m);
-    const r = p.referees[ref]?.games ? p.referees[ref] : null;
-    const teamLine = t => { const x = p.teams[t]; return x && x.ypg != null ? `${t}: ${x.ypg.toFixed(2)} yellows per game over ${x.games} games` : `${t}: no data this season`; };
-    const players = p.players.filter(pl => pl.team === m.home || pl.team === m.away).map(pl => `- ${pl.name} (${pl.team}): ${pl.yellows} yellows${pl.apps ? ` in ${pl.apps} apps` : ""}${pl.note ? `, ${pl.note}` : ""}`).join("\n") || "- none recorded";
-    const today = new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-    return `You are a Premier League card-betting analyst. You specialise in one market: Sportsbet "Player to be carded". A yellow or red card shown to the player counts. The bet is void if the player takes no part. Cards shown after the full-time whistle or to players not on the pitch do not count.
-
-Today is ${today}. Season ${p.season || "2026/27"}. Your own knowledge may be out of date: squads changed in the 2026 summer window, and Coventry City, Hull City and Ipswich Town are newly promoted. Trust the data and team news below over memory. Only pick a player who appears in the Sportsbet odds, the team news, or the data below, or who you are confident is in the current squad and likely to play.
-
-MATCH: ${m.home} v ${m.away}${m.kickoffUtc ? `, kick-off ${new Date(m.kickoffUtc).toUTCString()}` : ""}
-REFEREE: ${ref ? `${ref}${r ? `, ${r.yellows} yellows and ${r.reds} reds in ${r.games} Premier League games this season` : ", no data this season"}` : "not announced yet; assume an average Premier League referee (about 4 yellows per game)"}
-TEAM DISCIPLINE THIS SEASON:
-- ${teamLine(m.home)}
-- ${teamLine(m.away)}
-PLAYERS BOOKED THIS SEASON (partial list):
-${players}
-LAST SEASON NOTE: ${p.lastSeasonNote || "none"}
-
-SPORTSBET ODDS PASTED BY THE USER:
-${$("oddsIn").value.trim() || "(none given)"}
-
-TEAM NEWS OR LINEUPS PASTED BY THE USER:
-${$("newsIn").value.trim() || "(none given)"}
-
-How to judge each player: booking rate per 90 across this season and last season; expected minutes (a likely sub or rotation risk cuts the chance hard); position and direct opponent (full-backs and holding midfielders facing quick, tricky wingers foul most); referee strictness; likely game state (the side with less of the ball fouls more, derbies and relegation fights run hot); history in this fixture; suspension risk (5 yellows before matchweek 19 means a ban, so players on 4 may hold back).
-
-Give your honest probability that each player is carded. If Sportsbet odds were given, only include players where probability × odds is at least 1.05, and copy the odds exactly. If none qualify, return an empty bets list and say why in the summary. If no odds were given, include the 2 to 4 players with the highest chance. Never include more than 5. Write reasoning in Australian English, two or three short, specific sentences, with no em dashes.
-
-Reply with JSON only, in this shape:
-{"summary":"one sentence on the card outlook for this match","bets":[{"player":"full name","team":"team name","probability":0.35,"sportsbetOdds":2.75,"confidence":"high","reasoning":"..."}]}
-Use null for sportsbetOdds when no price was given for that player. confidence is high, medium or low.`;
-  }
-
   function stakeFor(prob, odds) {
     if (!odds || odds <= 1) return 0;
     const f = (prob * odds - 1) / (odds - 1);
@@ -431,68 +296,87 @@ Use null for sportsbetOdds when no price was given for that player. confidence i
     return Math.min(MAX_STAKE, Math.max(0.25, Math.round(BANK * f * KELLY * 4) / 4));
   }
   const minPrice = prob => Math.ceil((1 + MIN_EDGE) / prob * 20) / 20;
+  const CONF = { high: 3, medium: 2, low: 1 };
 
-  $("goBtn").onclick = async () => {
-    const m = currentMatch(); if (!m || !sample) return;
-    ctl = new AbortController();
-    $("goBtn").disabled = true; $("stopBtn").hidden = false;
-    setStatus("Thinking… this can take up to a minute.");
-    $("results").innerHTML = "";
-    try {
-      const out = await sample.json(buildPrompt(m), { signal: ctl.signal, modelTier: "complex" });
-      const bets = (Array.isArray(out?.bets) ? out.bets : []).filter(b => b && b.player && b.probability > 0 && b.probability < 1).slice(0, 5);
-      state.last = { match: `${m.home} v ${m.away}`, kickoffUtc: m.kickoffUtc || null, summary: String(out?.summary || ""), bets };
-      setStatus("");
-      renderResults();
-    } catch (e) {
-      const msg = { cancelled: "Stopped.", not_granted: "Claude wasn't allowed to run, so there's no analysis. Allow it from the page's permissions to try again.", rate_limited: "Too many requests just now. Wait a minute, then try again." }[e?.code];
-      setStatus(msg || "The analysis didn't come back in a usable form. Try again.", e?.code !== "cancelled");
-    } finally {
-      $("goBtn").disabled = false; $("stopBtn").hidden = true; ctl = null;
-    }
-  };
-  $("stopBtn").onclick = () => ctl?.abort();
-
-  function renderResults() {
-    const L = state.last; if (!L) { $("results").innerHTML = ""; return; }
-    let html = `<p class="summary"><b>${esc(L.match)}.</b> ${esc(L.summary)}</p>`;
-    if (!L.bets.length) html += `<div class="empty">No bets worth taking at these prices.</div>`;
-    L.bets.forEach((b, i) => {
-      const prob = Number(b.probability), fair = 1 / prob, sb = Number(b.sportsbetOdds) || null;
-      const edge = sb ? prob * sb - 1 : null;
-      const take = minPrice(prob);
-      const useOdds = sb || take;
-      const stake = stakeFor(prob, useOdds);
-      const lvl = { high: 3, medium: 2, low: 1 }[b.confidence] || 1;
-      html += `<article class="bet">
-        <div class="bet-head">
-          <div><h3>${esc(b.player)}</h3><span class="small muted">${esc(b.team)} · to be carded</span></div>
-          <div class="conf"><div class="cards" aria-hidden="true">${[1, 2, 3].map(n => `<i class="${n <= lvl ? "on" : ""}"></i>`).join("")}</div><span class="label">${esc(b.confidence || "low")} confidence</span></div>
+  // ---------- render: this week's games ----------
+  function renderGames() {
+    const p = state.pack; if (!p) return;
+    $("mwTitle").textContent = `Matchweek ${p.matchweek} bets`;
+    $("asOf").textContent = `Updated ${new Date(p.analysedAt || p.asOf + "T00:00:00").toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "long" })}`;
+    const fixtures = [...p.fixtures].sort((a, b) => a.kickoffUtc < b.kickoffUtc ? -1 : 1);
+    const all = [];
+    let html = "", lastDay = "";
+    for (const f of fixtures) {
+      const day = new Date(f.kickoffUtc).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
+      if (day !== lastDay) { html += `<div class="dayhead">${esc(day)}</div>`; lastDay = day; }
+      const an = f.analysis || {}, picks = an.picks || [];
+      const rr = refRate(f.referee);
+      const hr = teamRate(f.home), ar = teamRate(f.away);
+      html += `<article class="panel game" id="g-${esc(f.id)}">
+        <div>
+          <h2>${esc(f.home)} v ${esc(f.away)}</h2>
+          <div class="game-meta">
+            <span>${esc(kickText(f))}</span>
+            <span>${f.referee ? `Ref <b>${esc(f.referee)}</b>${rr != null ? ` (${rr.toFixed(1)} yellows a game)` : ""}` : "Referee not announced yet"}</span>
+            ${hr != null || ar != null ? `<span>Team yellows a game: ${esc(f.home)} <b>${hr != null ? hr.toFixed(1) : "–"}</b>, ${esc(f.away)} <b>${ar != null ? ar.toFixed(1) : "–"}</b></span>` : ""}
+          </div>
         </div>
-        <div class="prices">
-          <div class="price"><span class="label">Chance</span><b>${Math.round(prob * 100)}%</b></div>
-          <div class="price"><span class="label">Fair price</span><b>${price(fair)}</b></div>
-          <div class="price"><span class="label">Take at</span><b>${price(take)}+</b></div>
-          <div class="price"><span class="label">${sb ? "Sportsbet" : "Stake"}</span>${sb ? `<b class="${edge >= 0 ? "pos" : "neg"}">${price(sb)} <span class="small">${edge >= 0 ? "+" : ""}${Math.round(edge * 100)}%</span></b>` : `<b>${stake.toFixed(2)}u</b>`}</div>
-        </div>
-        <p>${esc(b.reasoning)}</p>
-        <div class="add">
-          <div class="field"><label class="label" for="ao${i}">Odds</label><input id="ao${i}" class="num" type="number" step="0.05" min="1.01" inputmode="decimal" value="${useOdds.toFixed(2)}"></div>
-          <div class="field"><label class="label" for="as${i}">Stake (u)</label><input id="as${i}" class="num" type="number" step="0.25" min="0.25" inputmode="decimal" value="${(stake || 0.5).toFixed(2)}"></div>
-          <button class="btn" data-add="${i}">Add to tracker</button>
-        </div>
+        ${an.outlook ? `<p class="outlook">${esc(an.outlook)}</p>` : ""}
+        <div class="picks">${picks.length ? picks.map((b, i) => { all.push({ f, b, key: f.id + "-" + i }); return pickHtml(f, b, f.id + "-" + i); }).join("") : `<div class="empty">${an.outlook ? "No bet in this game." : "Picks for this game are coming."}</div>`}</div>
+        ${an.absent ? `<p class="absent"><b>Out or doubtful:</b> ${esc(an.absent)}</p>` : ""}
       </article>`;
-    });
-    $("results").innerHTML = html;
-    for (const btn of $("results").querySelectorAll("[data-add]")) btn.onclick = () => {
-      const i = Number(btn.dataset.add), b = L.bets[i];
-      const odds = Number($("ao" + i).value), stake = Number($("as" + i).value);
-      if (!(odds > 1) || !(stake > 0)) { btn.textContent = "Check odds and stake"; return; }
-      const id = uid();
-      state.bets[id] = { id, createdAt: new Date().toISOString(), match: L.match, kickoffUtc: L.kickoffUtc, player: String(b.player), team: String(b.team || ""), odds, stake, probability: Number(b.probability), confidence: String(b.confidence || ""), reasoning: String(b.reasoning || ""), status: "pending" };
-      saveBet(id); renderTracker();
-      btn.textContent = "Added"; btn.disabled = true;
-    };
+    }
+    $("games").innerHTML = html || `<div class="empty">No fixtures loaded for this week yet.</div>`;
+    const best = all.filter(x => x.b.confidence !== "low").sort((x, y) => (y.b.probability * (CONF[y.b.confidence] || 1)) - (x.b.probability * (CONF[x.b.confidence] || 1))).slice(0, 4);
+    $("best").hidden = !best.length;
+    $("bestList").innerHTML = best.map(x => `<li><a href="#g-${esc(x.f.id)}" data-jump="${esc(x.f.id)}">${esc(x.b.player)}</a> <span>${esc(x.f.home)} v ${esc(x.f.away)} · ${Math.round(x.b.probability * 100)}% · take at ${price(minPrice(x.b.probability))}+</span></li>`).join("");
+    for (const a of $("bestList").querySelectorAll("[data-jump]")) a.onclick = e => { e.preventDefault(); $("g-" + a.dataset.jump)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); };
+    wirePicks(all);
+  }
+
+  function pickHtml(f, b, key) {
+    const prob = Number(b.probability), take = minPrice(prob), stake = stakeFor(prob, take);
+    const lvl = CONF[b.confidence] || 1;
+    return `<article class="bet">
+      <div class="bet-head">
+        <div><h3>${esc(b.player)}</h3><span class="small muted">${esc(b.team)} · to be carded</span></div>
+        <div class="conf"><div class="cards" aria-hidden="true">${[1, 2, 3].map(n => `<i class="${n <= lvl ? "on" : ""}"></i>`).join("")}</div><span class="label">${esc(b.confidence || "low")} confidence</span></div>
+      </div>
+      <div class="prices">
+        <div class="price"><span class="label">Chance</span><b>${Math.round(prob * 100)}%</b></div>
+        <div class="price"><span class="label">Fair price</span><b>${price(1 / prob)}</b></div>
+        <div class="price"><span class="label">Take at</span><b class="pos">${price(take)}+</b></div>
+        <div class="price"><span class="label">Stake</span><b>${stake.toFixed(2)}u</b></div>
+      </div>
+      <p>${esc(b.reasoning)}</p>
+      <div class="add">
+        <div class="field"><label class="label" for="ao-${key}">Your odds</label><input id="ao-${key}" class="num" type="number" step="0.05" min="1.01" inputmode="decimal" value="${take.toFixed(2)}"></div>
+        <div class="field"><label class="label" for="as-${key}">Stake (u)</label><input id="as-${key}" class="num" type="number" step="0.25" min="0" inputmode="decimal" value="${stake.toFixed(2)}"></div>
+        <button class="btn" data-add="${key}">Add to tracker</button>
+        <span class="small muted" id="an-${key}"></span>
+      </div>
+    </article>`;
+  }
+
+  function wirePicks(all) {
+    for (const x of all) {
+      const oddsIn = $("ao-" + x.key), stakeIn = $("as-" + x.key), note = $("an-" + x.key);
+      const btn = $("games").querySelector(`[data-add="${CSS.escape(x.key)}"]`);
+      const prob = Number(x.b.probability);
+      oddsIn.oninput = () => {
+        const o = Number(oddsIn.value), s = stakeFor(prob, o);
+        stakeIn.value = s.toFixed(2);
+        note.textContent = o > 1 && o < minPrice(prob) ? "Price is too short. Skip it unless it drifts." : "";
+      };
+      btn.onclick = () => {
+        const odds = Number(oddsIn.value), stake = Number(stakeIn.value);
+        if (!(odds > 1) || !(stake > 0)) { note.textContent = "Enter the odds you got and a stake above 0."; return; }
+        const id = uid();
+        state.bets[id] = { id, createdAt: new Date().toISOString(), match: `${x.f.home} v ${x.f.away}`, kickoffUtc: x.f.kickoffUtc, player: String(x.b.player), team: String(x.b.team || ""), odds, stake, probability: prob, confidence: String(x.b.confidence || ""), reasoning: String(x.b.reasoning || ""), status: "pending" };
+        saveBet(id); renderTracker();
+        btn.textContent = "Added"; btn.disabled = true; note.textContent = "";
+      };
+    }
   }
 
   // ---------- tracker ----------
@@ -554,16 +438,15 @@ Use null for sportsbetOdds when no price was given for that player. confidence i
 
   (async () => {
     const C = window.claude;
-    const [dbNs, userNs, sampleFn] = await Promise.all([C?.use("db"), C?.use("user"), C?.use("sample")].map(p => Promise.resolve(p).catch(() => null)));
-    sample = sampleFn || null;
+    const [dbNs, userNs] = await Promise.all([C?.use("db"), C?.use("user")].map(p => Promise.resolve(p).catch(() => null)));
     if (dbNs) {
       db = dbNs;
       db.doc("packs/current").onSnapshot(snap => {
-        if (!snap.exists) { $("days").innerHTML = `<div class="empty">This week's fixtures haven't been loaded yet. Ask Claude to refresh the data pack.</div>`; return; }
-        state.pack = snap.data(); renderFixtures(); renderMatch(); renderData();
-      }, () => { $("days").innerHTML = `<div class="empty">Couldn't load this week's fixtures. Reload to try again.</div>`; });
+        if (!snap.exists) { $("games").innerHTML = `<div class="empty">This week's bets haven't been loaded yet. They're updated every Tuesday and Friday.</div>`; return; }
+        state.pack = snap.data(); renderGames(); renderData();
+      }, () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
     } else {
-      $("days").innerHTML = `<div class="empty">Sign in to Claude to load this week's fixtures and referee data.</div>`;
+      $("games").innerHTML = `<div class="empty">Sign in to Claude to load this week's bets.</div>`;
     }
     const id = userNs ? await userNs.id().catch(() => null) : null;
     if (dbNs && id) {
@@ -582,7 +465,6 @@ Use null for sportsbetOdds when no price was given for that player. confidence i
       lsLoad(); renderTracker();
       setSync("Not signed in, so bets are only kept in this browser.");
     }
-    if (!sample) renderMatch();
   })();
 })();
 </script>
