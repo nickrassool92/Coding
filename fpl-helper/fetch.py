@@ -2,8 +2,8 @@
 
 Usage: python3 -I fetch.py <entry_id> <data_dir>
 Writes bootstrap.json, fixtures.json, entry.json, history.json, transfers.json, picks.json,
-summaries.json (recent matches for the squad and likely transfer targets) and fotmob.json
-(predicted or confirmed lineups for the next gameweek, and each club's non-league fixtures).
+summaries.json (every player's matches this season) and fotmob.json (predicted or confirmed
+lineups for the next gameweek, and each club's non-league fixtures this season and ahead).
 """
 import json
 import os
@@ -51,20 +51,19 @@ def main(entry_id, d):
     picks = get(FPL + f"entry/{entry_id}/event/{entry['current_event']}/picks/")
     save(d, "picks.json", picks)
 
-    # Recent matches for the squad and everyone who could plausibly be a transfer target.
+    # Match-by-match history for every player who has played, so the model can see each
+    # player's recent starts and rebuild every club's starting XIs to measure rotation.
     squad = {p["element"] for p in picks["picks"]}
-    pool = [p for p in boot["elements"]
-            if p["id"] in squad or (p["status"] != "u" and p["minutes"] >= 180
-                                    and (p["total_points"] >= 15 or float(p["selected_by_percent"] or 0) >= 1))]
+    pool = [p for p in boot["elements"] if p["id"] in squad or p["minutes"] > 0]
     summaries = {}
     for p in pool:
         try:
             hist = get(FPL + f"element-summary/{p['id']}/")["history"]
         except Exception:
             continue
-        summaries[p["id"]] = [{"round": h["round"], "minutes": h["minutes"], "starts": h["starts"],
-                               "kickoff": h["kickoff_time"]} for h in hist[-6:]]
-        time.sleep(0.15)
+        summaries[p["id"]] = [{"fixture": h["fixture"], "round": h["round"], "minutes": h["minutes"],
+                               "starts": h["starts"], "kickoff": h["kickoff_time"]} for h in hist]
+        time.sleep(0.1)
     save(d, "summaries.json", summaries)
 
     # FotMob: map clubs, read the next gameweek's lineups, and list each club's other fixtures.
@@ -112,7 +111,7 @@ def main(entry_id, d):
             if not when or comp == "Premier League":
                 continue
             t = datetime.fromisoformat(when.replace("Z", "+00:00"))
-            if now - timedelta(days=4) <= t <= now + timedelta(days=45):
+            if now - timedelta(days=150) <= t <= now + timedelta(days=45):
                 rows.append({"comp": comp, "utc": when})
         others[tid] = rows
         time.sleep(0.2)

@@ -252,6 +252,14 @@ td.fx { padding: 0 2px; }
       [...list].sort((a, b) => posOrder[a.pos] - posOrder[b.pos]).map(p => `<tr><td><b>${esc(p.name)}</b> <span class="muted small">${esc(p.team)}</span></td>${p.fixtures.map(list => `<td class="fx">${list.length ? list.map(f => `<span class="chip d${f.fdr}">${esc(f.opp)} ${f.home ? "H" : "A"}</span>`).join("") : `<span class="chip d0">–</span>`}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
     const ticker = tickerFor(squad);
 
+    // How much each club rotates, measured from this season's starting XIs.
+    const cr = Object.entries(d.club_rotation || {}).sort((a, b) => b[1].euro - a[1].euro || b[1].normal - a[1].normal);
+    const rotTable = cr.length ? `<section class="panel">
+        <div class="head"><h2>Club rotation</h2><span class="small muted">Changes to the starting XI per league game</span></div>
+        <p class="small muted">Measured from every club's line-ups this season, and blended with the league average while samples are small. "Around Europe" counts league games within three and a half days of a European match.</p>
+        <div class="tablewrap"><table><thead><tr><th>Club</th><th>Normally</th><th>Around Europe</th></tr></thead><tbody>${cr.map(([t, v]) => `<tr><td><b>${esc(t)}</b></td><td class="num">${v.normal.toFixed(1)} <span class="muted small">(${v.games} games)</span></td><td class="num">${v.euro_games ? `${v.euro.toFixed(1)} <span class="muted small">(${v.euro_games} games)</span>` : `<span class="muted">No European games</span>`}</td></tr>`).join("")}</tbody></table></div>
+      </section>` : "";
+
     // Other single-transfer ideas
     const idea = i => {
       const later = i.best_gw && i.best_gw > d.next_gw;
@@ -307,6 +315,7 @@ td.fx { padding: 0 2px; }
         <div class="head"><h2>Fixtures</h2><span class="small muted">Green is easy, red is hard</span></div>
         <div class="tablewrap">${ticker}</div>
       </section>
+      ${rotTable}
       <section class="panel">
         <h2>Other transfer ideas</h2>
         <p class="small muted">Each move shows the best gameweek to make it and the points it adds each week. Waiting is better when a player has tough games first, because you keep the transfer in hand.</p>

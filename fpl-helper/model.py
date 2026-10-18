@@ -111,6 +111,46 @@ def main(entry_id, d, out_path):
         return min(near, key=lambda x: abs((x[1] - k).total_seconds())) if near else None
 
     rotation = {}  # player id -> reasons, for the app
+    EURO = ("Champions League", "Europa League", "Conference League")
+
+    def club_rotation():
+        """How many changes each club makes to its starting XI between league games, normally and
+        when a European game falls within three and a half days, rebuilt from every player's matches."""
+        xi = {}
+        for pid, rows in summaries.items():
+            team = E[pid]["team"] if pid in E else None
+            for r in rows:
+                if r["starts"] and r.get("fixture"):
+                    xi.setdefault((team, r["fixture"]), set()).add(pid)
+        fx_by_id = {f["id"]: f for f in fixtures}
+        stats = {}
+        for t in teams:
+            games = sorted([f for f in fixtures if f["finished_provisional"] and t in (f["team_h"], f["team_a"])],
+                           key=lambda f: f["kickoff_time"])
+            normal, euro = [], []
+            for a, b2 in zip(games, games[1:]):
+                xa, xb = xi.get((t, a["id"]), set()), xi.get((t, b2["id"]), set())
+                if len(xa) < 10 or len(xb) < 10:
+                    continue
+                changes = 11 - len(xa & xb)
+                k = utc(b2["kickoff_time"])
+                near = any(any(x in c for x in EURO) and abs((when - k).total_seconds()) <= 3.5 * 86400
+                           for c, when in other_fx.get(t, []))
+                (euro if near else normal).append(changes)
+            stats[t] = (normal, euro)
+        all_n = [c for n, _ in stats.values() for c in n]
+        all_e = [c for _, e in stats.values() for c in e]
+        avg_n = sum(all_n) / len(all_n) if all_n else 1.5
+        avg_e = sum(all_e) / len(all_e) if all_e else avg_n + 1.0
+        out = {}
+        for t, (n, e) in stats.items():
+            # Shrink towards the league average: a handful of games is a small sample.
+            cn = (sum(n) + avg_n * 3) / (len(n) + 3)
+            ce = (sum(e) + avg_e * 3) / (len(e) + 3)
+            out[t] = {"normal": round(cn, 1), "euro": round(ce, 1), "games": len(n), "euro_games": len(e)}
+        return out
+
+    club_rot = club_rotation()
 
     def availability(p, offset, kickoff=None):
         if p["status"] == "u":
@@ -130,12 +170,16 @@ def main(entry_id, d, out_path):
             elif listed is False:
                 start_rate = min(start_rate, 0.15 if confirmed else 0.3)
                 reasons.append("Not in the confirmed lineup" if confirmed else "Not in FotMob's predicted lineup")
-        if p["element_type"] != 1:
-            eu = europe(p["team"], kickoff)
-            if eu:
-                start_rate *= 0.95 if season >= 0.9 else 0.88
-                if offset <= 1 and season < 0.9:
-                    reasons.append(f"{eu[0]} on {eu[1].strftime('%a %d %b')}, so rotation is more likely")
+        eu = europe(p["team"], kickoff) if p["element_type"] != 1 else None
+        if eu:
+            # Chance a starter keeps his place in a European week, relative to a normal week, from
+            # this club's own record. Regular starters are dropped less often than fringe players.
+            cr = club_rot[p["team"]]
+            keep = max(0.5, (11 - cr["euro"]) / max(1.0, 11 - cr["normal"]))
+            start_rate *= keep ** (0.5 if season >= 0.9 else 1.3)
+            if offset <= 1 and (season < 0.9 or keep < 0.85):
+                reasons.append(f"{eu[0]} on {eu[1].strftime('%a %d %b')}. {teams[p['team']]['short_name']} make about "
+                               f"{cr['euro']:.1f} changes around European games, against {cr['normal']:.1f} normally")
         chance = p["chance_of_playing_next_round"]
         if p["status"] in ("i", "s", "n"):
             chance = 0 if chance is None else chance
@@ -364,6 +408,7 @@ def main(entry_id, d, out_path):
     last_kickoff = max((f["kickoff_time"] for f in cur_fx if f["kickoff_time"]), default=None)
 
     out = {
+        "club_rotation": {teams[t]["short_name"]: v for t, v in club_rot.items()},
         "entry": entry_id,
         "current_gw": cur["id"] if cur else None,
         "current_complete": current_complete,
