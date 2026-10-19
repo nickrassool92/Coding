@@ -12,9 +12,15 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
-      - run: python3 -I score-predictor/predict.py "$RUNNER_TEMP/out.json" score-predictor/data.json
-        env:
-          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-      - run: .github/scripts/commit.sh score-predictor/data.json "$RUNNER_TEMP/out.json" "data: refresh Full Time"
+      # Without the key the predictions would lose the bookmakers' odds, so wait until the secret is added.
+      - if: env.ODDS_API_KEY == ''
+        run: echo "::warning::Add the ODDS_API_KEY repository secret to refresh Full Time."
+      - if: env.ODDS_API_KEY != ''
+        uses: actions/checkout@v4
+      - if: env.ODDS_API_KEY != ''
+        run: python3 -I score-predictor/predict.py "$RUNNER_TEMP/out.json" score-predictor/data.json
+      - if: env.ODDS_API_KEY != ''
+        run: .github/scripts/commit.sh score-predictor/data.json "$RUNNER_TEMP/out.json" "data: refresh Full Time"
