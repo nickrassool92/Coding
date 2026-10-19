@@ -1,0 +1,1310 @@
+{
+ "season": "2026/27",
+ "matchweek": 7,
+ "asOf": "2026-10-19",
+ "analysedAt": "2026-10-19T19:39:18Z",
+ "fixtures": [
+  {
+   "analysis": {
+    "absent": "Spurs: Porro, Kulusevski, Simons, Mudryk, Odobert out; Bentancur suspended. Coventry: Amenda, Kesler-Hayden, Woolfenden, Eccles, Haji Wright.",
+    "outlook": "Andy Madley is in charge and averages 4.0 yellows a match. Picks use season card rates and likely starters.",
+    "picks": [
+     {
+      "confidence": "medium",
+      "player": "van Ewijk",
+      "probability": 0.25,
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Expected to start in defence, with Andy Madley averaging 4.0 yellows a game.",
+      "team": "Coventry City"
+     },
+     {
+      "confidence": "low",
+      "player": "Van Hecke",
+      "probability": 0.23,
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Expected to start in defence, with Andy Madley averaging 4.0 yellows a game.",
+      "team": "Tottenham Hotspur"
+     },
+     {
+      "confidence": "low",
+      "player": "Yirenkyi",
+      "probability": 0.2,
+      "reasoning": "1 yellows in 4 starts this season, about 0.25 a game. Expected to start in midfield, with Andy Madley averaging 4.0 yellows a game.",
+      "team": "Coventry City"
+     },
+     {
+      "confidence": "low",
+      "player": "Gray",
+      "probability": 0.19,
+      "reasoning": "1 yellows in 4 starts this season, about 0.25 a game. Expected to start in midfield, with Andy Madley averaging 4.0 yellows a game.",
+      "team": "Tottenham Hotspur"
+     },
+     {
+      "confidence": "low",
+      "player": "Pinnock",
+      "probability": 0.19,
+      "reasoning": "1 yellows in 4 starts this season, about 0.25 a game. Expected to start in defence, with Andy Madley averaging 4.0 yellows a game.",
+      "team": "Coventry City"
+     }
+    ],
+    "updatedAt": "2026-10-19T17:57:39Z"
+   },
+   "away": "Coventry City",
+   "gw": 7,
+   "home": "Tottenham Hotspur",
+   "id": "tot-cov",
+   "kickoffTbc": false,
+   "kickoffUtc": "2026-10-19T19:00:00Z",
+   "lineupsConfirmed": false,
+   "referee": "Andy Madley"
+  },
+  {
+   "id": "ips-nfo",
+   "gw": 8,
+   "home": "Ipswich Town",
+   "away": "Nottingham Forest",
+   "kickoffUtc": "2026-10-23T19:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Thomas Bramall",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Thomas Bramall is in charge and averages 3.7 yellows a game. Ipswich Town pick up 2.0 yellows a game, Nottingham Forest 2.7. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Nottingham Forest: Igor Jesus",
+    "picks": [
+     {
+      "player": "Jair Cunha",
+      "team": "Nottingham Forest",
+      "probability": 0.24,
+      "confidence": "low",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Started last game, in defence, with Thomas Bramall averaging 3.7 yellows a game."
+     },
+     {
+      "player": "Delap",
+      "team": "Nottingham Forest",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Started last game, in attack, with Thomas Bramall averaging 3.7 yellows a game."
+     },
+     {
+      "player": "McAtee",
+      "team": "Nottingham Forest",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Started last game, in midfield, with Thomas Bramall averaging 3.7 yellows a game."
+     },
+     {
+      "player": "Murillo",
+      "team": "Nottingham Forest",
+      "probability": 0.2,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Started last game, in defence, with Thomas Bramall averaging 3.7 yellows a game."
+     },
+     {
+      "player": "Davis",
+      "team": "Ipswich Town",
+      "probability": 0.2,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Started last game, in defence, with Thomas Bramall averaging 3.7 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "avl-mci",
+   "gw": 8,
+   "home": "Aston Villa",
+   "away": "Manchester City",
+   "kickoffUtc": "2026-10-24T11:30:00Z",
+   "kickoffTbc": false,
+   "referee": "Peter Bankes",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Peter Bankes is in charge and averages 3.5 yellows a game. Aston Villa pick up 2.2 yellows a game, Manchester City 1.5. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Aston Villa: Maatsen, Ruggeri; Manchester City: Semenyo",
+    "picks": [
+     {
+      "player": "Cash",
+      "team": "Aston Villa",
+      "probability": 0.29,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 5 starts this season, about 0.60 a game. Regular starter, in defence, with Peter Bankes averaging 3.5 yellows a game."
+     },
+     {
+      "player": "Gvardiol",
+      "team": "Manchester City",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in defence, with Peter Bankes averaging 3.5 yellows a game."
+     },
+     {
+      "player": "McGinn",
+      "team": "Aston Villa",
+      "probability": 0.21,
+      "confidence": "low",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in midfield, with Peter Bankes averaging 3.5 yellows a game."
+     },
+     {
+      "player": "N.Jackson",
+      "team": "Aston Villa",
+      "probability": 0.21,
+      "confidence": "low",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in attack, with Peter Bankes averaging 3.5 yellows a game."
+     },
+     {
+      "player": "Gomes",
+      "team": "Aston Villa",
+      "probability": 0.2,
+      "confidence": "low",
+      "reasoning": "1 yellow in 4 starts this season, about 0.25 a game. Regular starter, in midfield, with Peter Bankes averaging 3.5 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "ars-eve",
+   "gw": 8,
+   "home": "Arsenal",
+   "away": "Everton",
+   "kickoffUtc": "2026-10-24T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Tony Harrington",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Tony Harrington is in charge and averages 3.3 yellows a game. Arsenal pick up 1.5 yellows a game, Everton 2.0. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Arsenal: Hincapie, Tzolis",
+    "picks": [
+     {
+      "player": "Armstrong",
+      "team": "Everton",
+      "probability": 0.26,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in midfield, with Tony Harrington averaging 3.3 yellows a game."
+     },
+     {
+      "player": "Garner",
+      "team": "Everton",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in midfield, with Tony Harrington averaging 3.3 yellows a game."
+     },
+     {
+      "player": "Gabriel",
+      "team": "Arsenal",
+      "probability": 0.19,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Tony Harrington averaging 3.3 yellows a game."
+     },
+     {
+      "player": "Johnson",
+      "team": "Everton",
+      "probability": 0.19,
+      "confidence": "low",
+      "reasoning": "1 yellow in 4 starts this season, about 0.25 a game. Regular starter, in midfield, with Tony Harrington averaging 3.3 yellows a game."
+     },
+     {
+      "player": "Röhl",
+      "team": "Everton",
+      "probability": 0.18,
+      "confidence": "low",
+      "reasoning": "1 yellow in 4 starts this season, about 0.25 a game. Regular starter, in midfield, with Tony Harrington averaging 3.3 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "cov-ful",
+   "gw": 8,
+   "home": "Coventry City",
+   "away": "Fulham",
+   "kickoffUtc": "2026-10-24T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Adam Herczeg",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Adam Herczeg is in charge and averages 5.0 yellows a game. Coventry City pick up 1.0 yellows a game, Fulham 2.3. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Coventry City: Amenda; Fulham: Sessegnon, Larsson",
+    "picks": [
+     {
+      "player": "King",
+      "team": "Fulham",
+      "probability": 0.33,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in midfield, with Adam Herczeg averaging 5.0 yellows a game."
+     },
+     {
+      "player": "Yirenkyi",
+      "team": "Coventry City",
+      "probability": 0.32,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in midfield, with Adam Herczeg averaging 5.0 yellows a game."
+     },
+     {
+      "player": "van Ewijk",
+      "team": "Coventry City",
+      "probability": 0.28,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in defence, with Adam Herczeg averaging 5.0 yellows a game."
+     },
+     {
+      "player": "Castagne",
+      "team": "Fulham",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in defence, with Adam Herczeg averaging 5.0 yellows a game."
+     },
+     {
+      "player": "Bassey",
+      "team": "Fulham",
+      "probability": 0.24,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Adam Herczeg averaging 5.0 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "che-tot",
+   "gw": 8,
+   "home": "Chelsea",
+   "away": "Tottenham Hotspur",
+   "kickoffUtc": "2026-10-24T16:30:00Z",
+   "kickoffTbc": false,
+   "referee": "Chris Kavanagh",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Chris Kavanagh is in charge and averages 5.0 yellows a game. Chelsea pick up 2.2 yellows a game, Tottenham Hotspur 1.5. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Chelsea: Martinez, James; Tottenham Hotspur: Sávio, Pedro Porro, Bentancur, Bergvall, Mudryk",
+    "picks": [
+     {
+      "player": "Van Hecke",
+      "team": "Tottenham Hotspur",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Chris Kavanagh averaging 5.0 yellows a game. Derby game."
+     },
+     {
+      "player": "Rogers",
+      "team": "Chelsea",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Chris Kavanagh averaging 5.0 yellows a game. Derby game."
+     },
+     {
+      "player": "Palmer",
+      "team": "Chelsea",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Chris Kavanagh averaging 5.0 yellows a game. Derby game."
+     },
+     {
+      "player": "Lavia",
+      "team": "Chelsea",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "1 yellow in 4 starts this season, about 0.25 a game. Regular starter, in midfield, with Chris Kavanagh averaging 5.0 yellows a game. Derby game."
+     },
+     {
+      "player": "Fofana",
+      "team": "Chelsea",
+      "probability": 0.25,
+      "confidence": "low",
+      "reasoning": "1 yellow in 4 starts this season, about 0.25 a game. Regular starter, in defence, with Chris Kavanagh averaging 5.0 yellows a game. Derby game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "cry-new",
+   "gw": 8,
+   "home": "Crystal Palace",
+   "away": "Newcastle United",
+   "kickoffUtc": "2026-10-25T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Paul Tierney",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Paul Tierney is in charge and averages 4.0 yellows a game. Crystal Palace pick up 1.5 yellows a game, Newcastle United 3.2. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Crystal Palace: Chadi Riad, Tomiyasu, Chilwell; Newcastle United: Livramento, Elanga, J.Ramsey",
+    "picks": [
+     {
+      "player": "N.Gonzalez",
+      "team": "Newcastle United",
+      "probability": 0.29,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in midfield, with Paul Tierney averaging 4.0 yellows a game."
+     },
+     {
+      "player": "Wissa",
+      "team": "Newcastle United",
+      "probability": 0.26,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in attack, with Paul Tierney averaging 4.0 yellows a game."
+     },
+     {
+      "player": "Yeremy",
+      "team": "Crystal Palace",
+      "probability": 0.26,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in midfield, with Paul Tierney averaging 4.0 yellows a game."
+     },
+     {
+      "player": "Kamada",
+      "team": "Crystal Palace",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Paul Tierney averaging 4.0 yellows a game."
+     },
+     {
+      "player": "Botman",
+      "team": "Newcastle United",
+      "probability": 0.21,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Paul Tierney averaging 4.0 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "hul-bre",
+   "gw": 8,
+   "home": "Hull City",
+   "away": "Brentford",
+   "kickoffUtc": "2026-10-25T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Robert Jones",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Robert Jones is in charge and averages 3.0 yellows a game. Hull City pick up 3.7 yellows a game, Brentford 3.0. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Hull City: Targett, Mendy, Gourna-Douath, Cho; Brentford: Janelt, Yarmoliuk",
+    "picks": [
+     {
+      "player": "Crooks",
+      "team": "Hull City",
+      "probability": 0.37,
+      "confidence": "high",
+      "reasoning": "4 yellows in 5 starts this season, about 0.80 a game. Regular starter, in midfield, with Robert Jones averaging 3.0 yellows a game."
+     },
+     {
+      "player": "McBurnie",
+      "team": "Hull City",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "4 yellows in 7 starts this season, about 0.57 a game. Regular starter, in attack, with Robert Jones averaging 3.0 yellows a game."
+     },
+     {
+      "player": "Thiago",
+      "team": "Brentford",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "4 yellows in 7 starts this season, about 0.57 a game. Regular starter, in attack, with Robert Jones averaging 3.0 yellows a game."
+     },
+     {
+      "player": "M.Sangaré",
+      "team": "Brentford",
+      "probability": 0.23,
+      "confidence": "low",
+      "reasoning": "2 yellows in 4 starts this season, about 0.50 a game. Regular starter, in midfield, with Robert Jones averaging 3.0 yellows a game."
+     },
+     {
+      "player": "Slater",
+      "team": "Hull City",
+      "probability": 0.19,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Robert Jones averaging 3.0 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "liv-bha",
+   "gw": 8,
+   "home": "Liverpool",
+   "away": "Brighton & Hove Albion",
+   "kickoffUtc": "2026-10-25T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Samuel Barrott",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Samuel Barrott is in charge and averages 3.9 yellows a game. Liverpool pick up 2.8 yellows a game, Brighton & Hove Albion 2.5. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Liverpool: Frimpong, Szoboszlai; Brighton & Hove Albion: Wieffer, Yohanna",
+    "picks": [
+     {
+      "player": "Groß",
+      "team": "Brighton & Hove Albion",
+      "probability": 0.28,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in midfield, with Samuel Barrott averaging 3.9 yellows a game."
+     },
+     {
+      "player": "Araujo",
+      "team": "Liverpool",
+      "probability": 0.26,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in defence, with Samuel Barrott averaging 3.9 yellows a game."
+     },
+     {
+      "player": "Mac Allister",
+      "team": "Liverpool",
+      "probability": 0.24,
+      "confidence": "low",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in midfield, with Samuel Barrott averaging 3.9 yellows a game."
+     },
+     {
+      "player": "Kerkez",
+      "team": "Liverpool",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 6 starts this season, about 0.33 a game. Regular starter, in defence, with Samuel Barrott averaging 3.9 yellows a game."
+     },
+     {
+      "player": "De Cuyper",
+      "team": "Brighton & Hove Albion",
+      "probability": 0.22,
+      "confidence": "low",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Samuel Barrott averaging 3.9 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "mun-bou",
+   "gw": 8,
+   "home": "Manchester United",
+   "away": "AFC Bournemouth",
+   "kickoffUtc": "2026-10-25T14:00:00Z",
+   "kickoffTbc": false,
+   "referee": "Jarred Gillett",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Jarred Gillett is in charge and averages 4.6 yellows a game. Manchester United pick up 2.0 yellows a game, AFC Bournemouth 3.5. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Manchester United: Dorgu, Šeško; AFC Bournemouth: Scott",
+    "picks": [
+     {
+      "player": "Tavernier",
+      "team": "AFC Bournemouth",
+      "probability": 0.32,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in midfield, with Jarred Gillett averaging 4.6 yellows a game."
+     },
+     {
+      "player": "Smith",
+      "team": "AFC Bournemouth",
+      "probability": 0.31,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in defence, with Jarred Gillett averaging 4.6 yellows a game."
+     },
+     {
+      "player": "Silva",
+      "team": "AFC Bournemouth",
+      "probability": 0.3,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in defence, with Jarred Gillett averaging 4.6 yellows a game."
+     },
+     {
+      "player": "Shaw",
+      "team": "Manchester United",
+      "probability": 0.28,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in defence, with Jarred Gillett averaging 4.6 yellows a game."
+     },
+     {
+      "player": "Dalot",
+      "team": "Manchester United",
+      "probability": 0.27,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in defence, with Jarred Gillett averaging 4.6 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  },
+  {
+   "id": "sun-lee",
+   "gw": 8,
+   "home": "Sunderland",
+   "away": "Leeds United",
+   "kickoffUtc": "2026-10-25T16:30:00Z",
+   "kickoffTbc": false,
+   "referee": "Stuart Attwell",
+   "lineupsConfirmed": false,
+   "analysis": {
+    "outlook": "Stuart Attwell is in charge and averages 6.2 yellows a game. Sunderland pick up 2.0 yellows a game, Leeds United 2.2. Picks are from the stats model only (no news or tipsters).",
+    "absent": "Sunderland: Danso, Ballard, Mundle; Leeds United: Rodon",
+    "picks": [
+     {
+      "player": "Tanaka",
+      "team": "Leeds United",
+      "probability": 0.35,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 5 starts this season, about 0.40 a game. Regular starter, in midfield, with Stuart Attwell averaging 6.2 yellows a game."
+     },
+     {
+      "player": "Calvert-Lewin",
+      "team": "Leeds United",
+      "probability": 0.34,
+      "confidence": "medium",
+      "reasoning": "3 yellows in 7 starts this season, about 0.43 a game. Regular starter, in attack, with Stuart Attwell averaging 6.2 yellows a game."
+     },
+     {
+      "player": "Bogle",
+      "team": "Leeds United",
+      "probability": 0.3,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in defence, with Stuart Attwell averaging 6.2 yellows a game."
+     },
+     {
+      "player": "Xhaka",
+      "team": "Sunderland",
+      "probability": 0.29,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Stuart Attwell averaging 6.2 yellows a game."
+     },
+     {
+      "player": "Ampadu",
+      "team": "Leeds United",
+      "probability": 0.29,
+      "confidence": "medium",
+      "reasoning": "2 yellows in 7 starts this season, about 0.29 a game. Regular starter, in midfield, with Stuart Attwell averaging 6.2 yellows a game."
+     }
+    ],
+    "updatedAt": "2026-10-19T19:39:18Z"
+   }
+  }
+ ],
+ "referees": {
+  "Adam Herczeg": {
+   "games": 1,
+   "reds": 0,
+   "yellows": 5
+  },
+  "Andy Madley": {
+   "games": 3,
+   "reds": 0,
+   "yellows": 12
+  },
+  "Chris Kavanagh": {
+   "games": 5,
+   "reds": 3,
+   "yellows": 25
+  },
+  "Craig Pawson": {
+   "games": 4,
+   "reds": 1,
+   "yellows": 20
+  },
+  "Darren England": {
+   "games": 5,
+   "reds": 0,
+   "yellows": 18
+  },
+  "Farai Hallam": {
+   "games": 3,
+   "reds": 0,
+   "yellows": 12
+  },
+  "Jarred Gillett": {
+   "games": 5,
+   "reds": 0,
+   "yellows": 23
+  },
+  "John Brooks": {
+   "games": 5,
+   "reds": 3,
+   "yellows": 26
+  },
+  "Josh Smith": {
+   "games": 1,
+   "reds": 0,
+   "yellows": 5
+  },
+  "Lewis Smith": {
+   "games": 1,
+   "reds": 0,
+   "yellows": 6
+  },
+  "Michael Oliver": {
+   "games": 6,
+   "reds": 1,
+   "yellows": 16
+  },
+  "Michael Salisbury": {
+   "games": 3,
+   "reds": 0,
+   "yellows": 7
+  },
+  "Paul Tierney": {
+   "games": 4,
+   "reds": 0,
+   "yellows": 16
+  },
+  "Peter Bankes": {
+   "games": 4,
+   "reds": 1,
+   "yellows": 14
+  },
+  "Robert Jones": {
+   "games": 4,
+   "reds": 0,
+   "yellows": 12
+  },
+  "Sam Barrott": {
+   "games": 4,
+   "reds": 0,
+   "yellows": 13
+  },
+  "Samuel Barrott": {
+   "games": 46,
+   "reds": 0,
+   "yellows": 178
+  },
+  "Stuart Attwell": {
+   "games": 4,
+   "reds": 2,
+   "yellows": 25
+  },
+  "Thomas Bramall": {
+   "games": 37,
+   "yellows": 138,
+   "reds": 5
+  },
+  "Tony Harrington": {
+   "games": 3,
+   "reds": 1,
+   "yellows": 10
+  }
+ },
+ "teams": {
+  "Arsenal": {
+   "games": 6,
+   "ypg": 1.5
+  },
+  "Aston Villa": {
+   "games": 6,
+   "ypg": 2.17
+  },
+  "AFC Bournemouth": {
+   "games": 6,
+   "ypg": 3.5
+  },
+  "Brentford": {
+   "games": 6,
+   "ypg": 3.0
+  },
+  "Brighton & Hove Albion": {
+   "games": 6,
+   "ypg": 2.5
+  },
+  "Chelsea": {
+   "games": 6,
+   "ypg": 2.17
+  },
+  "Coventry City": {
+   "games": 6,
+   "ypg": 1.0
+  },
+  "Crystal Palace": {
+   "games": 6,
+   "ypg": 1.5
+  },
+  "Everton": {
+   "games": 6,
+   "ypg": 2.0
+  },
+  "Fulham": {
+   "games": 6,
+   "ypg": 2.33
+  },
+  "Hull City": {
+   "games": 6,
+   "ypg": 3.67
+  },
+  "Ipswich Town": {
+   "games": 6,
+   "ypg": 2.0
+  },
+  "Leeds United": {
+   "games": 6,
+   "ypg": 2.17
+  },
+  "Liverpool": {
+   "games": 6,
+   "ypg": 2.83
+  },
+  "Manchester City": {
+   "games": 6,
+   "ypg": 1.5
+  },
+  "Manchester United": {
+   "games": 6,
+   "ypg": 2.0
+  },
+  "Newcastle United": {
+   "games": 6,
+   "ypg": 3.17
+  },
+  "Nottingham Forest": {
+   "games": 6,
+   "ypg": 2.67
+  },
+  "Tottenham Hotspur": {
+   "games": 6,
+   "ypg": 1.5
+  },
+  "Sunderland": {
+   "games": 6,
+   "ypg": 2.0
+  }
+ },
+ "players": [
+  {
+   "name": "Janelt",
+   "team": "Brentford",
+   "yellows": 4,
+   "apps": 7,
+   "note": "1 red"
+  },
+  {
+   "name": "Thiago",
+   "team": "Brentford",
+   "yellows": 4,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Crooks",
+   "team": "Hull City",
+   "yellows": 4,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "McBurnie",
+   "team": "Hull City",
+   "yellows": 4,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Cash",
+   "team": "Aston Villa",
+   "yellows": 3,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Smith",
+   "team": "AFC Bournemouth",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Tavernier",
+   "team": "AFC Bournemouth",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Silva",
+   "team": "AFC Bournemouth",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Groß",
+   "team": "Brighton & Hove Albion",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Armstrong",
+   "team": "Everton",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "King",
+   "team": "Fulham",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Calvert-Lewin",
+   "team": "Leeds United",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "J.Murphy",
+   "team": "Newcastle United",
+   "yellows": 3,
+   "apps": 3,
+   "note": ""
+  },
+  {
+   "name": "Wissa",
+   "team": "Newcastle United",
+   "yellows": 3,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Aina",
+   "team": "Nottingham Forest",
+   "yellows": 3,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Gabriel",
+   "team": "Arsenal",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Tzolis",
+   "team": "Arsenal",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "McGinn",
+   "team": "Aston Villa",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Alysson",
+   "team": "Aston Villa",
+   "yellows": 2,
+   "apps": 1,
+   "note": ""
+  },
+  {
+   "name": "N.Jackson",
+   "team": "Aston Villa",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Truffert",
+   "team": "AFC Bournemouth",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Cook",
+   "team": "AFC Bournemouth",
+   "yellows": 2,
+   "apps": 3,
+   "note": ""
+  },
+  {
+   "name": "Christie",
+   "team": "AFC Bournemouth",
+   "yellows": 2,
+   "apps": 3,
+   "note": ""
+  },
+  {
+   "name": "Ajer",
+   "team": "Brentford",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "M.Sangaré",
+   "team": "Brentford",
+   "yellows": 2,
+   "apps": 4,
+   "note": ""
+  },
+  {
+   "name": "Boscagli",
+   "team": "Brighton & Hove Albion",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "De Cuyper",
+   "team": "Brighton & Hove Albion",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Rogers",
+   "team": "Chelsea",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Palmer",
+   "team": "Chelsea",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "van Ewijk",
+   "team": "Coventry City",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Yirenkyi",
+   "team": "Coventry City",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Yeremy",
+   "team": "Crystal Palace",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Lerma",
+   "team": "Crystal Palace",
+   "yellows": 2,
+   "apps": 1,
+   "note": ""
+  },
+  {
+   "name": "Kamada",
+   "team": "Crystal Palace",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Garner",
+   "team": "Everton",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Bassey",
+   "team": "Fulham",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Castagne",
+   "team": "Fulham",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Slater",
+   "team": "Hull City",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Lukić",
+   "team": "Ipswich Town",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Davis",
+   "team": "Ipswich Town",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Fatawu",
+   "team": "Ipswich Town",
+   "yellows": 2,
+   "apps": 5,
+   "note": "1 red"
+  },
+  {
+   "name": "Bogle",
+   "team": "Leeds United",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Ampadu",
+   "team": "Leeds United",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Tanaka",
+   "team": "Leeds United",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Virgil",
+   "team": "Liverpool",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Kerkez",
+   "team": "Liverpool",
+   "yellows": 2,
+   "apps": 6,
+   "note": ""
+  },
+  {
+   "name": "Jacquet",
+   "team": "Liverpool",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Mac Allister",
+   "team": "Liverpool",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Araujo",
+   "team": "Liverpool",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Gvardiol",
+   "team": "Manchester City",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Dalot",
+   "team": "Manchester United",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Maguire",
+   "team": "Manchester United",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Shaw",
+   "team": "Manchester United",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "B.Fernandes",
+   "team": "Manchester United",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "N.Gonzalez",
+   "team": "Newcastle United",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Botman",
+   "team": "Newcastle United",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Joelinton",
+   "team": "Newcastle United",
+   "yellows": 2,
+   "apps": 1,
+   "note": ""
+  },
+  {
+   "name": "Delap",
+   "team": "Nottingham Forest",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Murillo",
+   "team": "Nottingham Forest",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Jair Cunha",
+   "team": "Nottingham Forest",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "McAtee",
+   "team": "Nottingham Forest",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Van Hecke",
+   "team": "Tottenham Hotspur",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Gallagher",
+   "team": "Tottenham Hotspur",
+   "yellows": 2,
+   "apps": 3,
+   "note": ""
+  },
+  {
+   "name": "Ballard",
+   "team": "Sunderland",
+   "yellows": 2,
+   "apps": 5,
+   "note": ""
+  },
+  {
+   "name": "Xhaka",
+   "team": "Sunderland",
+   "yellows": 2,
+   "apps": 7,
+   "note": ""
+  },
+  {
+   "name": "Gomes",
+   "team": "Aston Villa",
+   "yellows": 1,
+   "apps": 4,
+   "note": "1 red"
+  },
+  {
+   "name": "Yarmoliuk",
+   "team": "Brentford",
+   "yellows": 1,
+   "apps": 4,
+   "note": "1 red"
+  },
+  {
+   "name": "Struijk",
+   "team": "Brighton & Hove Albion",
+   "yellows": 1,
+   "apps": 2,
+   "note": "1 red"
+  },
+  {
+   "name": "Foden",
+   "team": "Manchester City",
+   "yellows": 1,
+   "apps": 4,
+   "note": "1 red"
+  },
+  {
+   "name": "Awoniyi",
+   "team": "Coventry City",
+   "yellows": 0,
+   "apps": 3,
+   "note": "1 red"
+  },
+  {
+   "name": "Disasi",
+   "team": "Crystal Palace",
+   "yellows": 0,
+   "apps": 2,
+   "note": "1 red"
+  },
+  {
+   "name": "Sessegnon",
+   "team": "Fulham",
+   "yellows": 0,
+   "apps": 1,
+   "note": "1 red"
+  },
+  {
+   "name": "Gravenberch",
+   "team": "Liverpool",
+   "yellows": 0,
+   "apps": 3,
+   "note": "1 red"
+  },
+  {
+   "name": "Bentancur",
+   "team": "Tottenham Hotspur",
+   "yellows": 0,
+   "apps": 4,
+   "note": "1 red"
+  },
+  {
+   "name": "Danso",
+   "team": "Sunderland",
+   "yellows": 0,
+   "apps": 5,
+   "note": "1 red"
+  },
+  {
+   "name": "Reinildo",
+   "team": "Sunderland",
+   "yellows": 0,
+   "apps": 6,
+   "note": "1 red"
+  }
+ ],
+ "lastSeasonNote": "In 2025/26 James Garner (Everton), Yerson Mosquera and André were joint top of the Premier League yellow card list with 12 each, and Joelinton had 10. Bruno Guimarães, Tonali, Romero and Rodri moved clubs in the summer.",
+ "notes": "Picks come from the stats model only: card rates from FPL, referees and lineups from FotMob. Refreshed every hour, so confirmed lineups show up about an hour before kick-off.",
+ "sources": [
+  {
+   "name": "Fantasy Premier League (cards, minutes, availability)",
+   "url": "https://fantasy.premierleague.com"
+  },
+  {
+   "name": "FotMob (referees and lineups)",
+   "url": "https://www.fotmob.com/leagues/47/overview/premier-league"
+  }
+ ]
+}

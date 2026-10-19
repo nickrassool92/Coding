@@ -1,3 +1,11 @@
+<!doctype html>
+<html lang="en-AU">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Full Time">
+<link rel="apple-touch-icon" href="../icons/full-time-icon.png">
+<link rel="icon" href="../icons/full-time-icon.png">
 <title>Full Time</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -227,9 +235,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
     }
   }
 
+  // Outside Claude (e.g. GitHub Pages) the data is a data.json file next to this page, refreshed by GitHub Actions.
+  function loadFile(onData, onFail) {
+    const go = () => fetch("data.json", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(onData, onFail);
+    go();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") go(); });
+  }
+
   (async () => {
     const db = await Promise.resolve(window.claude?.use("db")).catch(() => null);
-    if (!db) { $("games").innerHTML = `<div class="empty">Sign in to Claude to see the predictions.</div>`; return; }
+    if (!db) { loadFile(render, () => { $("games").innerHTML = `<div class="empty">Couldn't load the predictions. Reload to try again.</div>`; }); return; }
     db.doc("predictions/current").onSnapshot(snap => {
       if (!snap.exists) { $("games").innerHTML = `<div class="empty">Predictions haven't been made yet. They update every day.</div>`; return; }
       render(snap.data());

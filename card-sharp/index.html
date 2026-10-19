@@ -1,3 +1,11 @@
+<!doctype html>
+<html lang="en-AU">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Card Sharp">
+<link rel="apple-touch-icon" href="../icons/card-sharp-icon.png">
+<link rel="icon" href="../icons/card-sharp-icon.png">
 <title>Card Sharp</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -448,6 +456,13 @@ td.num, th.num { text-align: right; }
     $("dSources").innerHTML = (p.sources || []).map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a></li>`).join("");
   }
 
+  // Outside Claude (e.g. GitHub Pages) the data is a data.json file next to this page, refreshed by GitHub Actions.
+  function loadFile(onData, onFail) {
+    const go = () => fetch("data.json", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(onData, onFail);
+    go();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") go(); });
+  }
+
   // ---------- boot ----------
   try { const t = localStorage.getItem("cardsharp-tab"); if (t === "track" || t === "data") showTab(t); } catch {}
   renderTracker();
@@ -462,7 +477,8 @@ td.num, th.num { text-align: right; }
         state.pack = snap.data(); renderGames(); renderData();
       }, () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
     } else {
-      $("games").innerHTML = `<div class="empty">Sign in to Claude to load this week's bets.</div>`;
+      loadFile(p => { state.pack = p; renderGames(); renderData(); },
+        () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
     }
     const id = userNs ? await userNs.id().catch(() => null) : null;
     if (dbNs && id) {
@@ -479,7 +495,7 @@ td.num, th.num { text-align: right; }
       }, () => setSync("Lost connection to your saved bets. Reload to reconnect."));
     } else {
       lsLoad(); renderTracker();
-      setSync("Not signed in, so bets are only kept in this browser.");
+      setSync(dbNs ? "Not signed in, so bets are only kept in this browser." : "Bets are saved on this device only.");
     }
   })();
 })();

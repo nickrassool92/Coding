@@ -1,3 +1,11 @@
+<!doctype html>
+<html lang="en-AU">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gaffer">
+<link rel="apple-touch-icon" href="../icons/gaffer-icon.png">
+<link rel="icon" href="../icons/gaffer-icon.png">
 <title>Gaffer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -326,16 +334,27 @@ td.fx { padding: 0 2px; }
     for (const b of $("main").querySelectorAll("[data-ft]")) b.onclick = () => { chosen = Number(b.dataset.ft); try { localStorage.setItem("gaffer-ft-" + d.next_gw, String(chosen)); } catch {} render(); };
   }
 
+  // Outside Claude (e.g. GitHub Pages) the data is a data.json file next to this page, refreshed by GitHub Actions.
+  function loadFile(onData, onFail) {
+    const go = () => fetch("data.json", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(onData, onFail);
+    go();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") go(); });
+  }
+
   (async () => {
     const C = window.claude;
     const db = await Promise.resolve(C?.use("db")).catch(() => null);
-    if (!db) { $("main").innerHTML = `<div class="empty">Sign in to Claude to load your team.</div>`; return; }
-    db.doc("teams/853712").onSnapshot(snap => {
-      if (!snap.exists) { $("main").innerHTML = `<div class="empty">Your team hasn't been loaded yet. It refreshes every day.</div>`; return; }
-      data = snap.data();
+    const show = d => {
+      data = d;
       try { const v = localStorage.getItem("gaffer-ft-" + data.next_gw); chosen = v ? Number(v) : null; } catch {}
       render();
-    }, () => { $("main").innerHTML = `<div class="empty">Couldn't load your team. Reload to try again.</div>`; });
+    };
+    const failed = () => { $("main").innerHTML = `<div class="empty">Couldn't load your team. Reload to try again.</div>`; };
+    if (!db) { loadFile(show, failed); return; }
+    db.doc("teams/853712").onSnapshot(snap => {
+      if (!snap.exists) { $("main").innerHTML = `<div class="empty">Your team hasn't been loaded yet. It refreshes every day.</div>`; return; }
+      show(snap.data());
+    }, failed);
   })();
 })();
 </script>
