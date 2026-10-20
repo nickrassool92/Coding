@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en-AU">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Euro Nights">
+<link rel="apple-touch-icon" href="../icons/euro-nights-icon.png">
+<link rel="icon" href="../icons/euro-nights-icon.png">
+<title>Euro Nights</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: Full Time's scoreboard cards under floodlights. A competition switch, then each night's games, then how the model is doing. */
+:root {
+  --bg: #E9ECF3;
+  --surface: #FFFFFF;
+  --ink: #141A2B;
+  --muted: #586179;
+  --hair: #D3D8E4;
+  --board: #10172B;
+  --board-ink: #EEF1F8;
+  --lamp: #9FD3FF;
+  --ucl: #2D4FD6;
+  --uel: #E07A16;
+  --uecl: #1E9A6B;
+  --home: #2D4FD6;
+  --draw: #9AA2B4;
+  --away: #C8483A;
+  --good: #1E8A4C;
+  --good-soft: #DDF1E4;
+  --bad: #C2362C;
+  --bad-soft: #F8E1DE;
+  --focus: #2563EB;
+  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B1020; --surface: #141B2E; --ink: #E6E9F2; --muted: #9AA3BA; --hair: #263049;
+    --board: #070B16; --board-ink: #EEF1F8; --lamp: #9FD3FF;
+    --ucl: #7D96FF; --uel: #F5A04D; --uecl: #4DC89A;
+    --home: #7D96FF; --draw: #78819A; --away: #EE7A69; --good: #4CC27F; --good-soft: #15301F; --bad: #F06A5F; --bad-soft: #3B1F1C; --focus: #7AA7FF;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0B1020; --surface: #141B2E; --ink: #E6E9F2; --muted: #9AA3BA; --hair: #263049;
+  --board: #070B16; --board-ink: #EEF1F8; --lamp: #9FD3FF;
+  --ucl: #7D96FF; --uel: #F5A04D; --uecl: #4DC89A;
+  --home: #7D96FF; --draw: #78819A; --away: #EE7A69; --good: #4CC27F; --good-soft: #15301F; --bad: #F06A5F; --bad-soft: #3B1F1C; --focus: #7AA7FF;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(16px, env(safe-area-inset-top, 0px)) 48px;
+}
+.app { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2 { font-family: var(--display); margin: 0; font-weight: 900; letter-spacing: 0.02em; text-transform: uppercase; text-wrap: balance; }
+h1 { font-size: 2.6rem; line-height: 0.95; }
+h2 { font-size: 1.5rem; line-height: 1; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.top .sub { color: var(--muted); font-size: 0.9rem; }
+
+.comps { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.comps button { font: inherit; font-size: 0.85rem; font-weight: 600; border: 1px solid var(--hair); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 6px 12px; white-space: nowrap; cursor: pointer; min-height: 36px; }
+.comps button[aria-pressed="true"] { background: var(--board); color: var(--board-ink); border-color: var(--board); }
+
+.record { background: var(--board); color: var(--board-ink); border-radius: 14px; padding: 14px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.record .label { color: color-mix(in srgb, var(--board-ink) 65%, transparent); }
+.record b { font-family: var(--mono); font-size: 1.5rem; color: var(--lamp); display: block; }
+.record .note { grid-column: 1 / -1; font-size: 0.8rem; color: color-mix(in srgb, var(--board-ink) 70%, transparent); }
+
+.dayhead { font-family: var(--display); font-weight: 900; font-size: 1.15rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 2px solid var(--ink); padding-bottom: 4px; }
+.games { display: flex; flex-direction: column; gap: 12px; }
+.game { background: var(--surface); border: 1px solid var(--hair); border-left: 5px solid var(--c, var(--hair)); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.game[data-comp="UCL"] { --c: var(--ucl); } .game[data-comp="UEL"] { --c: var(--uel); } .game[data-comp="UECL"] { --c: var(--uecl); }
+.tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c); }
+.line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.team { font-weight: 700; font-size: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.team small { display: block; font-weight: 400; font-size: 0.75rem; color: var(--muted); }
+.team.away { text-align: right; }
+.board { display: flex; gap: 4px; align-items: center; background: var(--board); border-radius: 8px; padding: 6px 8px; }
+.board span { font-family: var(--mono); font-weight: 700; font-size: 1.7rem; color: var(--lamp); min-width: 1.1ch; text-align: center; line-height: 1; }
+.board i { color: color-mix(in srgb, var(--board-ink) 55%, transparent); font-style: normal; font-family: var(--mono); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.82rem; color: var(--muted); justify-content: space-between; }
+.bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--hair); }
+.bar span { display: block; height: 100%; }
+.bar .h { background: var(--home); } .bar .d { background: var(--draw); } .bar .a { background: var(--away); }
+.pct { display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 0.82rem; }
+.pct span:nth-child(2) { text-align: center; } .pct span:nth-child(3) { text-align: right; }
+.pct b { font-family: var(--mono); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 0.78rem; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--hair); background: var(--bg); }
+.chip.close { border-color: var(--lamp); background: color-mix(in srgb, var(--lamp) 22%, var(--surface)); font-weight: 700; }
+.ft { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 0.9rem; }
+.ft.hit { background: var(--good-soft); color: var(--good); }
+.ft.miss { background: var(--bad-soft); color: var(--bad); }
+.ft.live { background: var(--bg); color: var(--muted); }
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+td.n, th.n { text-align: right; font-family: var(--mono); }
+details summary { cursor: pointer; }
+.empty { border: 1px dashed var(--hair); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
+.foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div><h1>Euro Nights</h1><p class="sub">Champions League, Europa League and Conference League score predictions</p></div>
+    <span class="small muted" id="updated"></span>
+  </header>
+  <nav class="comps" id="comps" aria-label="Competition">
+    <button data-c="ALL" aria-pressed="true">All</button>
+    <button data-c="UCL" aria-pressed="false">Champions League</button>
+    <button data-c="UEL" aria-pressed="false">Europa League</button>
+    <button data-c="UECL" aria-pressed="false">Conference League</button>
+  </nav>
+  <section class="record" id="record" hidden>
+    <div><span class="label">Results right</span><b id="rRight">–</b></div>
+    <div><span class="label">Exact scores</span><b id="rExact">–</b></div>
+    <div><span class="label">Strike rate</span><b id="rRate">–</b></div>
+    <p class="note">Every prediction is locked at kick-off and checked against the final score.</p>
+  </section>
+  <div id="games" class="games"><div class="empty">Loading this week's predictions…</div></div>
+  <section class="panel" id="btPanel" hidden>
+    <h2>Backtest</h2>
+    <p class="small muted">Every European game this season (qualifiers and the league phase) predicted using only the games played before that day. Bookmaker odds aren't included, because past odds need a paid plan, so this tests the stats model on its own.</p>
+    <div class="tablewrap"><table id="btSummary"></table></div>
+    <p class="small muted">Brier score measures how good the win, draw and loss chances were. Lower is better, and 0.667 is the same as guessing.</p>
+    <details><summary class="small">See every game</summary><div class="tablewrap" style="margin-top:8px"><table id="btGames"></table></div></details>
+  </section>
+  <section class="panel" id="leaguePanel" hidden>
+    <h2>League strength</h2>
+    <p class="small muted">How strong each domestic league is, worked out from how its clubs do in Europe. A gap of 0.10 is worth about 10% more goals for the stronger league's clubs. Clubs is how many of its clubs have played in Europe in the last 15 months: a league seen through one or two clubs is really those clubs' form.</p>
+    <div class="tablewrap"><table id="leagues"></table></div>
+  </section>
+  <section class="panel" id="ratingsPanel" hidden>
+    <h2>Club ratings</h2>
+    <p class="small muted">Goals each club would expect to score and concede in a game against an average side from across Europe's leagues, from this season's league and European games plus last season's European games.</p>
+    <div class="tablewrap"><table id="ratings"></table></div>
+  </section>
+  <p class="foot" id="method">Predictions are estimates, not certainties.</p>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pct = x => Math.round(x * 100) + "%";
+  const COMP = { UCL: "Champions League", UEL: "Europa League", UECL: "Conference League" };
+  let data = null, comp = "ALL";
+  try { comp = localStorage.getItem("euronights-comp") || "ALL"; } catch {}
+
+  for (const b of $("comps").querySelectorAll("button")) b.onclick = () => {
+    comp = b.dataset.c;
+    try { localStorage.setItem("euronights-comp", comp); } catch {}
+    if (data) render(data);
+  };
+
+  function gameHtml(g) {
+    const time = new Date(g.kickoff).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
+    const team = (name, league, cls) => `<span class="team ${cls}">${esc(name)}${league ? `<small>${esc(league)}</small>` : ""}</span>`;
+    const p = g.pred;
+    const head = `<div class="meta"><span class="tag">${esc(COMP[g.comp] || g.comp)}${g.round ? ` · matchday ${esc(g.round)}` : ""}</span><span>${esc(time)}${p ? ` · expected goals ${p.xg[0].toFixed(1)} – ${p.xg[1].toFixed(1)}` : ""}</span></div>`;
+    if (!p) {
+      return `<article class="game" data-comp="${esc(g.comp)}">${head}<div class="line">${team(g.home, g.home_league, "")}<div class="board"><span>–</span><i>:</i><span>–</span></div>${team(g.away, g.away_league, "away")}</div>
+        <p class="small muted">${g.result ? `Full time ${g.result[0]}-${g.result[1]}. ` : ""}No prediction was made before kick-off.</p></article>`;
+    }
+    const pr = p.probs, close = Math.abs(pr.home - pr.away) < 0.05;
+    let status = "";
+    if (g.finished && g.result) {
+      const [hs, as] = g.result, [ph, pa] = p.score;
+      const hit = Math.sign(hs - as) === Math.sign(ph - pa), exact = hs === ph && as === pa;
+      status = `<div class="ft ${hit ? "hit" : "miss"}"><span>Full time ${hs}-${as}</span><span>${exact ? "Exact score" : hit ? "Right result" : "Wrong result"}</span></div>`;
+    } else if (new Date(g.kickoff) <= new Date()) {
+      status = `<div class="ft live"><span>Kicked off. The result appears after the next update.</span></div>`;
+    }
+    const others = p.top_scores.filter(s => !(s.score[0] === p.score[0] && s.score[1] === p.score[1])).slice(0, 3)
+      .map(s => `${s.score[0]}-${s.score[1]} ${pct(s.p)}`).join(", ");
+    let market = "";
+    if (p.market) {
+      const mk = p.market, md = p.model || pr, gap = Math.max(...["home", "draw", "away"].map(k => Math.abs(md[k] - mk[k])));
+      const sb = mk.sportsbet ? ` · Sportsbet $${mk.sportsbet.home.toFixed(2)} / $${mk.sportsbet.draw.toFixed(2)} / $${mk.sportsbet.away.toFixed(2)}` : "";
+      market = `<p class="small muted">Bookmakers ${pct(mk.home)} / ${pct(mk.draw)} / ${pct(mk.away)} (${mk.books} Australian books)${esc(sb)}. Stats model alone ${pct(md.home)} / ${pct(md.draw)} / ${pct(md.away)}.</p>` +
+        (gap >= 0.10 ? `<span class="chip close">Model and bookmakers disagree by ${Math.round(gap * 100)} points</span>` : "");
+    } else {
+      market = `<p class="small muted">No bookmaker prices found for this game, so this is the stats model alone.</p>`;
+    }
+    return `<article class="game" data-comp="${esc(g.comp)}">${head}
+      <div class="line">${team(g.home, g.home_league, "")}<div class="board" aria-label="Predicted score ${p.score[0]} ${p.score[1]}"><span>${p.score[0]}</span><i>:</i><span>${p.score[1]}</span></div>${team(g.away, g.away_league, "away")}</div>
+      <div class="bar" aria-hidden="true"><span class="h" style="width:${pr.home * 100}%"></span><span class="d" style="width:${pr.draw * 100}%"></span><span class="a" style="width:${pr.away * 100}%"></span></div>
+      <div class="pct"><span>Home <b>${pct(pr.home)}</b></span><span>Draw <b>${pct(pr.draw)}</b></span><span>Away <b>${pct(pr.away)}</b></span></div>
+      <div class="chips">
+        ${close ? `<span class="chip close">Too close to call</span>` : ""}
+        <span class="chip">Both score ${pct(p.btts)}</span>
+        <span class="chip">Over 2.5 goals ${pct(p.over25)}</span>
+        <span class="chip">Clean sheet home ${pct(p.clean_sheet[0])} · away ${pct(p.clean_sheet[1])}</span>
+      </div>
+      ${market}
+      <p class="small muted">Other likely scores: ${esc(others)}</p>
+      ${status}
+    </article>`;
+  }
+
+  function render(d) {
+    data = d;
+    for (const b of $("comps").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.c === comp));
+    $("method").textContent = d.market_note && /priced/.test(d.market_note)
+      ? `Predictions blend the stats model (${Math.round((1 - d.market_weight) * 100)}%) with Australian bookmakers' odds (${Math.round(d.market_weight * 100)}%). They are estimates, not certainties.`
+      : "Predictions come from the stats model alone. They are estimates, not certainties.";
+    $("updated").textContent = "Updated " + new Date(d.updatedAt).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit" });
+
+    const inComp = x => comp === "ALL" || x.comp === comp;
+    const hist = Object.values(d.history || {}).filter(inComp);
+    $("record").hidden = !hist.length;
+    if (hist.length) {
+      const right = hist.filter(h => h.right_result).length;
+      $("rRight").textContent = `${right}/${hist.length}`;
+      $("rExact").textContent = String(hist.filter(h => h.exact).length);
+      $("rRate").textContent = `${Math.round(right / hist.length * 100)}%`;
+    }
+
+    let html = "", lastDay = "";
+    for (const g of d.games.filter(inComp)) {
+      const day = new Date(g.kickoff).toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long" });
+      if (day !== lastDay) { html += `<div class="dayhead">${esc(day)}</div>`; lastDay = day; }
+      html += gameHtml(g);
+    }
+    $("games").innerHTML = html || `<div class="empty">No ${esc(COMP[comp] || "European")} games this week.</div>`;
+
+    const bt = d.backtest;
+    if (bt) {
+      $("btPanel").hidden = false;
+      const row = (name, s) => `<tr><td>${name}</td><td class="n">${s.right}/${s.games}</td><td class="n">${s.exact ?? "–"}</td><td class="n">${s.brier.toFixed(3)}</td></tr>`;
+      $("btSummary").innerHTML = `<thead><tr><th></th><th class="n">Right</th><th class="n">Exact</th><th class="n">Brier</th></tr></thead><tbody>` +
+        row("<b>Euro Nights</b>", bt.summary) +
+        (bt.stages || []).map(s => row(`&nbsp;&nbsp;${esc(s.name.replace(" league phase", ""))}`, s)).join("") +
+        row("Most common result", { ...bt.baselines.home_draw_away_rates, games: bt.summary.games }) +
+        row("Coin flip", { ...bt.baselines.coin_flip, games: bt.summary.games }) + `</tbody>`;
+      $("btGames").innerHTML = `<thead><tr><th>Date</th><th>Game</th><th class="n">Predicted</th><th class="n">Result</th><th></th></tr></thead><tbody>` +
+        bt.games.slice().reverse().map(g => `<tr><td class="n">${esc(g.date.slice(5))}</td><td>${esc(g.match)}</td><td class="n">${g.pred[0]}-${g.pred[1]}</td><td class="n">${g.result[0]}-${g.result[1]}</td><td style="color:var(--${g.right ? "good" : "bad"})">${g.exact ? "Exact" : g.right ? "Right" : "Wrong"}</td></tr>`).join("") + `</tbody>`;
+    }
+
+    const lg = d.league_strength || [];
+    if (lg.length) {
+      $("leaguePanel").hidden = false;
+      const top = lg.slice(0, 15), rest = lg.slice(15);
+      const tr = r => `<tr><td>${esc(r.league)}</td><td class="n">${r.clubs}</td><td class="n">${r.strength >= 0 ? "+" : ""}${r.strength.toFixed(2)}</td></tr>`;
+      $("leagues").innerHTML = `<thead><tr><th>League</th><th class="n">Clubs</th><th class="n">Strength</th></tr></thead><tbody>${top.map(tr).join("")}</tbody>` +
+        (rest.length ? `<tbody><tr><td colspan="3"><details><summary class="small">${rest.length} more leagues</summary><table>${rest.map(tr).join("")}</table></details></td></tr></tbody>` : "");
+    }
+
+    const r = (d.ratings || []).filter(inComp);
+    $("ratingsPanel").hidden = !r.length;
+    $("ratings").innerHTML = `<thead><tr><th>Club</th><th class="n">Scores</th><th class="n">Concedes</th></tr></thead><tbody>${r.map(x =>
+      `<tr><td><b>${esc(x.club)}</b> <span class="muted small">${esc(x.comp)}</span></td><td class="n">${x.attack.toFixed(2)}</td><td class="n">${x.defence.toFixed(2)}</td></tr>`).join("")}</tbody>`;
+  }
+
+  // Outside Claude the data is a data.json file next to this page.
+  function loadFile(onData, onFail) {
+    const go = () => fetch("data.json", { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(onData, onFail);
+    go();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") go(); });
+  }
+
+  const failed = () => { $("games").innerHTML = `<div class="empty">Couldn't load the predictions. Reload to try again.</div>`; };
+  (async () => {
+    const db = await Promise.resolve(window.claude?.use("db")).catch(() => null);
+    if (!db) { loadFile(render, failed); return; }
+    db.doc("predictions/current").onSnapshot(snap => {
+      if (!snap.exists) { $("games").innerHTML = `<div class="empty">Predictions haven't been made yet. They update every day.</div>`; return; }
+      render(snap.data());
+    }, failed);
+  })();
+})();
+</script>
