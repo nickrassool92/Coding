@@ -165,6 +165,13 @@ td.fx { padding: 0 2px; }
 
   <div id="main"><div class="empty">Loading your team…</div></div>
 
+  <section class="panel" id="trackPanel" hidden>
+    <h2>How the projections are doing</h2>
+    <p class="small muted" id="trackLead"></p>
+    <div class="tablewrap"><table id="trackTable"></table></div>
+    <p class="small muted" id="trackNote"></p>
+  </section>
+
   <p class="foot">Projections use the official Fantasy Premier League data and fixture difficulty. They are estimates, not guarantees.</p>
 </div>
 
@@ -351,6 +358,19 @@ td.fx { padding: 0 2px; }
     };
     const failed = () => { $("main").innerHTML = `<div class="empty">Couldn't load your team. Reload to try again.</div>`; };
     if (!db) { loadFile(show, failed); return; }
+    // Track record: last gameweeks' projections against the points actually scored (written by track.py).
+    db.doc("track/calibration").onSnapshot(snap => {
+      const c = snap.exists ? snap.data() : null;
+      if (!c || !c.weeks_checked) { $("trackPanel").hidden = true; return; }
+      $("trackPanel").hidden = false;
+      const last = c.weeks[c.weeks.length - 1];
+      $("trackLead").textContent = `${c.weeks_checked} gameweek${c.weeks_checked === 1 ? "" : "s"} checked. In GW${last.gw} the ${last.players} players it projected scored ${last.actual} points against ${last.projected} projected, off by ${last.mae} points per player on average.`;
+      $("trackTable").innerHTML = `<thead><tr><th>Position</th><th>Projected</th><th>Actual</th><th>Correction</th></tr></thead><tbody>` +
+        Object.entries(c.positions).map(([pos, r]) => `<tr><td><b>${esc(pos)}</b></td><td class="num">${r.projected}</td><td class="num">${r.actual}</td><td class="num">${c.applied[{ GK: 1, DEF: 2, MID: 3, FWD: 4 }[pos]] ? "×" + c.applied[{ GK: 1, DEF: 2, MID: 3, FWD: 4 }[pos]] : "not yet"}</td></tr>`).join("") + `</tbody>`;
+      $("trackNote").textContent = Object.keys(c.applied).length
+        ? "Each position's projections are scaled by its correction, learned from how past projections compared with real points."
+        : `Corrections start after ${c.min_weeks} checked gameweeks, so one big haul can't skew the model.`;
+    }, () => {});
     db.doc("teams/853712").onSnapshot(snap => {
       if (!snap.exists) { $("main").innerHTML = `<div class="empty">Your team hasn't been loaded yet. It refreshes every day.</div>`; return; }
       show(snap.data());

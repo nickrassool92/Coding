@@ -385,7 +385,8 @@ def main(out_path, prev_path=None, cache_dir=None):
                 prev_doc = json.load(f)
         except Exception:
             prev_doc = {}
-    p = PARAMS
+    # Settings adopted by the weekly retune (retrain.py) override the fitted defaults.
+    p = {**PARAMS, **(prev_doc.get("tuned_params") or {})}
     now = datetime.now(timezone.utc)
     fixtures, teams, league_of, games = gather(cache_dir, prev_doc.get("league_of"))
     th = fit(games, now, p)
@@ -444,7 +445,8 @@ def main(out_path, prev_path=None, cache_dir=None):
         if t["league"] in th["S"]:
             leagues[t["league"]] = {"league": league_label(t), "strength": round(th["S"][t["league"]], 3), "clubs": len(seen.get(t["league"], ()))}
 
-    out = {"backtest": prev_doc.get("backtest"), "params": p, "market_weight": MARKET_WEIGHT,
+    out = {"backtest": prev_doc.get("backtest"), "tuned_params": prev_doc.get("tuned_params"), "tuning": prev_doc.get("tuning", []),
+           "params": p, "market_weight": MARKET_WEIGHT,
            "market_note": market_note, "updatedAt": iso(now), "games": out_games, "history": history,
            "ratings": ratings, "league_strength": sorted(leagues.values(), key=lambda r: -r["strength"]),
            "fitted_on": len([g for g in games if 0 < (now.timestamp() - g["_ts"]) / 86400 <= p["window_days"]]),

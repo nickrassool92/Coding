@@ -141,6 +141,7 @@ details summary { cursor: pointer; }
     <h2>Backtest</h2>
     <p class="small muted">Every European game this season (qualifiers and the league phase) predicted using only the games played before that day. Bookmaker odds aren't included, because past odds need a paid plan, so this tests the stats model on its own.</p>
     <div class="tablewrap"><table id="btSummary"></table></div>
+    <p class="small muted" id="tuneNote"></p>
     <p class="small muted">Brier score measures how good the win, draw and loss chances were. Lower is better, and 0.667 is the same as guessing.</p>
     <details><summary class="small">See every game</summary><div class="tablewrap" style="margin-top:8px"><table id="btGames"></table></div></details>
   </section>
@@ -243,6 +244,10 @@ details summary { cursor: pointer; }
     }
     $("games").innerHTML = html || `<div class="empty">No ${esc(COMP[comp] || "European")} games this week.</div>`;
 
+    const tn = (d.tuning || [])[(d.tuning || []).length - 1];
+    $("tuneNote").textContent = tn
+      ? `Settings are re-checked every week against the latest games. Last check ${new Date(tn.date + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long" })}: ${tn.adopted ? `switched to new settings, which did better on the latest ${tn.holdout.candidate.games} games (${tn.holdout.candidate.right} right against ${tn.holdout.in_use.right}).` : `kept the current settings, because the best alternative wasn't better on the latest ${tn.holdout.in_use.games} games.`}`
+      : "Settings are re-checked every week against the latest games.";
     const bt = d.backtest;
     if (bt) {
       $("btPanel").hidden = false;

@@ -240,7 +240,8 @@ def main(out_path, prev_path=None):
                 prev_doc = json.load(f)
         except Exception:
             prev_doc = {}
-    p = PARAMS
+    # Settings adopted by the weekly retune (retrain.py) override the fitted defaults below.
+    p = {**PARAMS, **(prev_doc.get("tuned_params") or {})}
 
     boot = get(FPL + "bootstrap-static/")
     fixtures = get(FPL + "fixtures/")
@@ -348,6 +349,8 @@ def main(out_path, prev_path=None):
     short = {fm_name[t]: teams[t]["short_name"] for t in fm_name}
     out = {
         "backtest": prev_doc.get("backtest"),
+        "tuned_params": prev_doc.get("tuned_params"),
+        "tuning": prev_doc.get("tuning", []),
         "season": season,
         "params": p,
         "market_weight": MARKET_WEIGHT,

@@ -43,7 +43,7 @@ def utc(s):
     return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
-def main(entry_id, d, out_path):
+def main(entry_id, d, out_path, calibration_path=None):
     b = load(d, "bootstrap.json")
     fixtures = load(d, "fixtures.json")
     entry = load(d, "entry.json")
@@ -213,9 +213,21 @@ def main(entry_id, d, out_path):
         share_att = under_att / (under_att + under_def) if (under_att + under_def) > 0 else 0.3
         return total * share_att, total * (1 - share_att)
 
+    # Per-position corrections learned by track.py from how past projections compared with actual points.
+    cal = {}
+    if calibration_path:
+        try:
+            with open(calibration_path) as f:
+                c = json.load(f)
+            cal = {int(k): float(v) for k, v in (c.get("data", c).get("applied") or {}).items()}
+        except (OSError, ValueError, AttributeError):
+            cal = {}
+
     proj = {}
     for p in b["elements"]:
         att, dfn = per_match(p)
+        k_pos = cal.get(p["element_type"], 1.0)
+        att, dfn = att * k_pos, dfn * k_pos
         row = []
         for i, g in enumerate(gws):
             pts = 0.0
@@ -432,6 +444,10 @@ def main(entry_id, d, out_path):
         "plans": [{**pl, "xi": [describe(i) for i in pl["xi"]], "bench": [describe(i) for i in pl["bench"]],
                    "captain": E[pl["captain"]]["web_name"], "vice": E[pl["vice"]]["web_name"]} for pl in plans],
         "ideas": ideas,
+        # Next gameweek's projection for every player likely to matter, logged by track.py to check later.
+        "projections": {"gw": gws[0] if gws else None, "calibration": {str(k): v for k, v in cal.items()},
+                        "xp": {str(pid): row[0]["xp"] for pid, row in proj.items() if row and (row[0]["xp"] >= 1.0 or pid in squad_ids)},
+                        "type": {str(p["id"]): p["element_type"] for p in b["elements"] if proj.get(p["id"]) and (proj[p["id"]][0]["xp"] >= 1.0 or p["id"] in squad_ids)}},
         "updatedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     with open(out_path, "w") as f:
@@ -439,4 +455,4 @@ def main(entry_id, d, out_path):
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]), sys.argv[2], sys.argv[3])
+    main(int(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)

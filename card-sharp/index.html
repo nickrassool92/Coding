@@ -218,6 +218,13 @@ td.num, th.num { text-align: right; }
 
   <!-- DATA -->
   <section id="view-data" class="app" style="gap:14px" hidden>
+    <div class="panel" id="recordPanel" hidden>
+      <h2>How the picks are doing</h2>
+      <p class="small muted" id="recordLead"></p>
+      <div class="tablewrap"><table id="recordBins"></table></div>
+      <div class="tablewrap"><table id="recordGws"></table></div>
+      <p class="small muted" id="recordNote"></p>
+    </div>
     <div class="panel prose">
       <h2>How the analyst works</h2>
       <p>Each pick weighs the player's booking rate, expected minutes, the opponent they'll be up against, the referee, and how the match is likely to play out. Teams without the ball foul more, and derbies and relegation fights run hot.</p>
@@ -443,6 +450,22 @@ td.num, th.num { text-align: right; }
   $("unitIn").onchange = () => { const v = Number($("unitIn").value); if (v > 0) { state.unit = v; saveSettings(); renderTracker(); } };
 
   // ---------- data tab ----------
+  // ---------- track record: every pick graded against what happened ----------
+  function renderRecord(r) {
+    if (!r || !r.graded) { $("recordPanel").hidden = true; return; }
+    $("recordPanel").hidden = false;
+    $("recordLead").textContent = `${r.carded} of ${r.graded} picks were carded, against ${r.expected} expected from their chances` +
+      (r.void ? ` (${r.void} void because the player didn't play).` : ".");
+    const pc = x => Math.round(x * 100) + "%";
+    $("recordBins").innerHTML = `<thead><tr><th>Predicted chance</th><th class="num">Picks</th><th class="num">Predicted</th><th class="num">Carded</th></tr></thead><tbody>` +
+      r.bins.filter(b => b.picks).map(b => `<tr><td>${pc(b.from)} to ${pc(b.to)}</td><td class="num">${b.picks}</td><td class="num">${pc(b.predicted)}</td><td class="num">${pc(b.carded / b.picks)}</td></tr>`).join("") + `</tbody>`;
+    $("recordGws").innerHTML = `<thead><tr><th>Gameweek</th><th class="num">Picks</th><th class="num">Expected</th><th class="num">Carded</th></tr></thead><tbody>` +
+      r.by_gw.map(g => `<tr><td>${g.gw}</td><td class="num">${g.picks}</td><td class="num">${g.expected}</td><td class="num">${g.carded}</td></tr>`).join("") + `</tbody>`;
+    $("recordNote").textContent = r.applied_multiplier !== 1
+      ? `The model's card rates are now scaled by ${r.applied_multiplier} to match what has actually happened.`
+      : `After ${r.min_picks} graded picks, the model's card rates will be adjusted to match what has actually happened (${r.graded} so far). Until then a few games can swing these numbers a lot.`;
+  }
+
   function renderData() {
     const p = state.pack; if (!p) return;
     $("dAsOf").textContent = `As of ${new Date(p.asOf + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long" })}`;
@@ -476,6 +499,7 @@ td.num, th.num { text-align: right; }
         if (!snap.exists) { $("games").innerHTML = `<div class="empty">This week's bets haven't been loaded yet. They're updated every morning.</div>`; return; }
         state.pack = snap.data(); renderGames(); renderData();
       }, () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
+      db.doc("ledger/summary").onSnapshot(snap => renderRecord(snap.exists ? snap.data() : null), () => {});
     } else {
       loadFile(p => { state.pack = p; renderGames(); renderData(); },
         () => { $("games").innerHTML = `<div class="empty">Couldn't load this week's bets. Reload to try again.</div>`; });
