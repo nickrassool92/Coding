@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en-AU">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cup Day">
+<title>Cup Day</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Public+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a race book for one day at Flemington. Race picker, the day's long shot, then the selected race as a card of runners. */
+:root {
+  --bg: #F3F0E8;
+  --surface: #FFFFFF;
+  --ink: #1C1A16;
+  --muted: #6A6458;
+  --hair: #DDD6C8;
+  --rose: #B3123B;
+  --rose-soft: #F8E3E8;
+  --turf: #1F6B45;
+  --turf-soft: #DFF0E6;
+  --gold: #B8860B;
+  --gold-soft: #F6EBCD;
+  --bar: #2E5E9E;
+  --place: #8FB2DD;
+  --focus: #2563EB;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12110E; --surface: #1C1A16; --ink: #EEE9DE; --muted: #A79F8F; --hair: #34302A;
+    --rose: #F06A8A; --rose-soft: #3A1B23; --turf: #5CC48A; --turf-soft: #18301F; --gold: #E2B44A; --gold-soft: #3A3015;
+    --bar: #7FA8E8; --place: #3E5A80; --focus: #7AA7FF; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12110E; --surface: #1C1A16; --ink: #EEE9DE; --muted: #A79F8F; --hair: #34302A;
+  --rose: #F06A8A; --rose-soft: #3A1B23; --turf: #5CC48A; --turf-soft: #18301F; --gold: #E2B44A; --gold-soft: #3A3015;
+  --bar: #7FA8E8; --place: #3E5A80; --focus: #7AA7FF; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 48px max(16px, env(safe-area-inset-left, 0px)); }
+.app { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; font-weight: 800; text-wrap: balance; }
+h1 { font-size: 2.2rem; line-height: 1; }
+h2 { font-size: 1.35rem; line-height: 1.15; }
+h3 { font-size: 1.05rem; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button, input { font: inherit; color: inherit; }
+
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; border-bottom: 3px double var(--rose); padding-bottom: 10px; }
+.top .sub { color: var(--muted); font-size: 0.9rem; }
+.meta { display: flex; gap: 6px 12px; flex-wrap: wrap; font-size: 0.85rem; color: var(--muted); }
+.meta b { color: var(--ink); }
+
+.racebar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.racebar button { flex: 0 0 auto; border: 1px solid var(--hair); background: var(--surface); border-radius: 10px; padding: 6px 10px; text-align: left; cursor: pointer; min-width: 64px; }
+.racebar button b { display: block; font-family: var(--display); font-size: 1.05rem; }
+.racebar button span { font-size: 0.75rem; color: var(--muted); }
+.racebar button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.racebar button[aria-pressed="true"] span { color: color-mix(in srgb, var(--bg) 75%, transparent); }
+.racebar button.done { opacity: 0.6; }
+
+.panel { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.longday { border-left: 6px solid var(--gold); background: color-mix(in srgb, var(--gold-soft) 60%, var(--surface)); }
+.picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 520px) { .picks { grid-template-columns: 1fr; } }
+.pick { border: 1px solid var(--hair); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pick b { font-family: var(--display); font-size: 1.1rem; }
+.pick.win { border-color: var(--turf); background: var(--turf-soft); }
+.pick.place { border-color: var(--bar); }
+.pick.long { border-color: var(--gold); background: var(--gold-soft); }
+.chip { display: inline-block; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--hair); background: var(--bg); }
+.chip.ok { border-color: var(--turf); color: var(--turf); }
+.chip.warn { border-color: var(--rose); color: var(--rose); }
+
+.runners { display: flex; flex-direction: column; gap: 8px; }
+.runner { background: var(--surface); border: 1px solid var(--hair); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: start; min-width: 0; }
+.runner .no { font-family: var(--display); font-size: 1.5rem; font-weight: 800; color: var(--rose); min-width: 1.6ch; text-align: center; line-height: 1.1; }
+.runner .who { min-width: 0; }
+.runner .who b { font-size: 1rem; overflow-wrap: anywhere; }
+.runner .who .small { display: block; }
+.runner .chance { text-align: right; }
+.runner .chance b { font-family: var(--mono); font-size: 1.15rem; display: block; }
+.bars { grid-column: 2 / -1; display: flex; flex-direction: column; gap: 3px; }
+.bar { height: 7px; border-radius: 999px; background: var(--hair); overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--bar); }
+.bar.p span { background: var(--place); }
+.prices { grid-column: 2 / -1; display: flex; gap: 6px 14px; flex-wrap: wrap; align-items: center; font-size: 0.85rem; }
+.prices input { width: 82px; padding: 5px 8px; border: 1px solid var(--hair); border-radius: 8px; background: var(--bg); font-family: var(--mono); }
+.notes { grid-column: 2 / -1; margin: 0; padding-left: 18px; font-size: 0.82rem; color: var(--muted); }
+.value { font-weight: 700; color: var(--turf); }
+.novalue { color: var(--muted); }
+.empty { border: 1px dashed var(--hair); border-radius: 12px; padding: 18px; text-align: center; color: var(--muted); }
+.foot { font-size: 0.8rem; color: var(--muted); text-align: center; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--hair); white-space: nowrap; }
+td.n, th.n { text-align: right; font-family: var(--mono); }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div><h1>Cup Day</h1><p class="sub">Flemington · Tuesday 3 November · win and place predictor</p></div>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <nav class="racebar" id="racebar" aria-label="Races"></nav>
+
+  <section class="panel longday" id="longday" hidden></section>
+
+  <div id="race"><div class="empty">Loading the races…</div></div>
+
+  <section class="panel" id="howPanel" hidden>
+    <h2>How it works</h2>
+    <p class="small">Each horse gets a score from its form: recent finishes and margins, the market's opinion of it last start, class rises and drops, weight, barrier, days since its last run, and its record at the distance, at Flemington and on today's track rating. The weights come from fitting the model on <span id="hRaces"></span> metro races in Melbourne and Sydney this year.</p>
+    <p class="small">The honest result: the betting market predicts better than form alone, and the form model added almost nothing on top of it. So when odds are in, the market leads (sharpened slightly towards favourites, because outsiders are over-bet) and the form model only nudges it. Without odds, the form model is used on its own. Enter the Sportsbet odds you see and the race recalculates on the spot. Place chances come from simulating the finishing order thousands of times.</p>
+    <div class="tablewrap"><table id="hTest"></table></div>
+    <p class="small muted">Each race predicted by a model fitted on other meetings (5-fold cross-validation). Log loss measures how good the win chances were: lower is better.</p>
+  </section>
+
+  <p class="foot">Gamble responsibly. Set a limit and stick to it. Gambling Help Online: 1800 858 858.</p>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const pct = x => (x * 100 >= 10 ? Math.round(x * 100) : (x * 100).toFixed(1)) + "%";
+  const price = x => "$" + (x >= 100 ? Math.round(x) : x.toFixed(2));
+  const LONG_MIN = 15, LONG_PLACE = 0.12, MIN_PRICED = 0.8;
+  let data = null, current = null;
+  const LS = "cupday-odds-v1";
+  let mine = {};
+  try { mine = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch {}
+  const saveMine = () => { try { localStorage.setItem(LS, JSON.stringify(mine)); } catch {} };
+
+  const softmax = s => { const m = Math.max(...s), e = s.map(x => Math.exp(x - m)), t = e.reduce((a, b) => a + b, 0); return e.map(x => x / t); };
+
+  // Same simulation as the server: winner by win chance, later places by flattened chances.
+  function places(p, n, sims = 4000) {
+    const later = p.map(x => Math.pow(x, 0.85)), cnt = p.map(() => 0);
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let s = 0; s < sims; s++) {
+      const left = p.map((_, i) => i); let w = p;
+      for (let k = 0; k < Math.min(n, p.length); k++) {
+        let tot = 0; for (const i of left) tot += w[i];
+        let r = rnd() * tot, pick = left[left.length - 1];
+        for (const i of left) { r -= w[i]; if (r <= 0) { pick = i; break; } }
+        cnt[pick]++; left.splice(left.indexOf(pick), 1); w = later;
+      }
+    }
+    return cnt.map(c => c / sims);
+  }
+
+  // Re-blend a race with the odds you typed in (yours override the race-morning prices).
+  function view(race) {
+    const typed = mine[race.race] || {};
+    const odds = race.runners.map(r => Number(typed[r.no]) > 1 ? Number(typed[r.no]) : (r.odds || null));
+    const priced = odds.filter(Boolean).length;
+    const [a, b] = data.blend;
+    let runners = race.runners.map((r, i) => ({ ...r, odds: odds[i], mineOdds: Number(typed[r.no]) > 1 }));
+    const anyTyped = Object.keys(typed).length > 0;
+    if (anyTyped && priced >= MIN_PRICED * runners.length) {
+      const pm = softmax(runners.map(r => a * r.score));
+      const mk = runners.map((r, i) => r.odds || 1 / Math.max(1e-3, pm[i]));
+      const inv = mk.map(o => 1 / o), t = inv.reduce((x, y) => x + y, 0);
+      const p = softmax(runners.map((r, i) => a * r.score + b * Math.log(Math.max(1e-4, inv[i] / t))));
+      const pl = places(p, race.places_paid);
+      runners = runners.map((r, i) => ({ ...r, win: p[i], place: pl[i], fair_win: 1 / p[i], fair_place: 1 / pl[i] }));
+    }
+    runners.forEach(r => { r.value = r.odds ? r.win * r.odds : null; });
+    runners.sort((x, y) => y.win - x.win);
+    const cands = runners.filter(r => r.odds && r.odds >= LONG_MIN && r.place >= LONG_PLACE);
+    const longshot = cands.length ? cands.reduce((m, r) => (r.value > m.value ? r : m)) : null;
+    return { runners, priced, longshot, blended: (anyTyped && priced >= MIN_PRICED * runners.length) || race.odds_blended };
+  }
+
+  function takeAt(p) { return Math.ceil(1.05 / p * 20) / 20; }
+
+  function renderRace() {
+    const race = data.races.find(r => r.race === current);
+    if (!race) { $("race").innerHTML = `<div class="empty">Race not found.</div>`; return; }
+    const v = view(race);
+    const top = v.runners[0], bestPlace = v.runners.slice().sort((x, y) => y.place - x.place)[0];
+    const jump = race.start_utc ? new Date(race.start_utc) : null;
+    const timeTxt = jump ? jump.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" }) : race.time;
+    const closed = race.status === "closed" || (jump && jump <= new Date());
+    const ls = v.longshot;
+    const priceNote = v.priced ? `${v.priced} of ${race.field_size} runners priced${v.blended ? ", blended with the model" : " (need most of the field for a blend)"}` : "No odds yet: enter the Sportsbet odds you see to get value picks and a long shot.";
+    $("race").innerHTML = `
+      <section class="panel">
+        <div>
+          <span class="label">Race ${race.race} · ${esc(timeTxt)} your time · ${race.distance}m · ${race.field_size} runners · ${race.places_paid} places paid</span>
+          <h2>${esc(race.name)}</h2>
+          <p class="small muted">${esc(race.conditions)}. ${race.prize ? "$" + race.prize.toLocaleString("en-AU") + " prize money." : ""}${race.scratched.length ? ` Scratched: ${race.scratched.join(", ")}.` : ""}</p>
+        </div>
+        ${closed ? `<span class="chip warn">Race has started. Predictions are frozen as they were at the jump.</span>` : ""}
+        <div class="picks">
+          <div class="pick win"><span class="label">Top pick to win</span><b>${top.no}. ${esc(top.name)}</b><span class="small">${pct(top.win)} to win · fair ${price(top.fair_win)} · take ${price(takeAt(top.win))}+</span></div>
+          <div class="pick place"><span class="label">Safest place bet</span><b>${bestPlace.no}. ${esc(bestPlace.name)}</b><span class="small">${pct(bestPlace.place)} to place · fair place ${price(bestPlace.fair_place)}</span></div>
+          <div class="pick long"><span class="label">Long shot</span>${ls
+            ? `<b>${ls.no}. ${esc(ls.name)}</b><span class="small">${price(ls.odds)} · ${pct(ls.win)} to win, ${pct(ls.place)} to place. ${ls.value >= 1 ? `Genuine value (${Math.round((ls.value - 1) * 100)}% edge). Each way, 0.5 to 1 unit.` : `Best of the outsiders but no edge at this price (${Math.round((1 - ls.value) * 100)}% short), so a small fun bet at most.`}</span>`
+            : `<span class="small">${v.priced ? `No outsider at $${LONG_MIN}+ has a real chance to place here. Skip it.` : "Needs prices. Add the Sportsbet odds below."}</span>`}</div>
+        </div>
+        <p class="small muted">${esc(priceNote)}</p>
+      </section>
+      <div class="runners">${v.runners.map(r => `
+        <article class="runner">
+          <div class="no">${r.no}</div>
+          <div class="who"><b>${esc(r.name)}</b><span class="small muted">Barrier ${r.barrier ?? "–"} · ${r.weight ?? "–"}kg · ${esc(r.jockey || "")}</span><span class="small muted">${esc(r.trainer || "")}${r.last10 ? ` · form ${esc(r.last10)}` : ""}</span></div>
+          <div class="chance"><b>${pct(r.win)}</b><span class="small muted">place ${pct(r.place)}</span></div>
+          <div class="bars" aria-hidden="true"><div class="bar"><span style="width:${Math.min(100, r.win * 100 * 2)}%"></span></div><div class="bar p"><span style="width:${r.place * 100}%"></span></div></div>
+          <div class="prices">
+            <span>Fair <b class="num">${price(r.fair_win)}</b> win · <b class="num">${price(r.fair_place)}</b> place</span>
+            <label class="small">Odds <input inputmode="decimal" type="number" step="0.05" min="1.01" data-no="${r.no}" value="${r.mineOdds ? r.odds : ""}" placeholder="${r.odds ? r.odds.toFixed(2) : "$"}" ${closed ? "disabled" : ""}></label>
+            ${r.value ? `<span class="${r.value >= 1.05 ? "value" : "novalue"}">${r.value >= 1.05 ? `Value: ${Math.round((r.value - 1) * 100)}% edge` : "No value at this price"}</span>` : ""}
+          </div>
+          ${r.notes?.length ? `<ul class="notes">${r.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+        </article>`).join("")}</div>`;
+    for (const inp of $("race").querySelectorAll("input[data-no]")) inp.onchange = () => {
+      const m = mine[race.race] || (mine[race.race] = {});
+      const val = Number(inp.value);
+      if (val > 1) m[inp.dataset.no] = val; else delete m[inp.dataset.no];
+      saveMine(); renderRace(); renderLongDay();
+    };
+  }
+
+  function renderLongDay() {
+    let best = null;
+    for (const race of data.races) {
+      const jump = race.start_utc ? new Date(race.start_utc) : null;
+      if (race.status === "closed" || (jump && jump <= new Date())) continue;
+      const ls = view(race).longshot;
+      if (ls && (!best || ls.value > best.ls.value)) best = { race, ls };
+    }
+    $("longday").hidden = !best;
+    if (best) $("longday").innerHTML = `<span class="label">Long shot of the day</span><h2>${best.ls.no}. ${esc(best.ls.name)} <span class="small muted">Race ${best.race.race}</span></h2>
+      <p class="small">${price(best.ls.odds)} with a ${pct(best.ls.win)} chance to win and ${pct(best.ls.place)} to place. ${best.ls.value >= 1 ? `That's about ${Math.round((best.ls.value - 1) * 100)}% better than the price suggests.` : `The price is about ${Math.round((1 - best.ls.value) * 100)}% shorter than its real chance, which is normal for outsiders, so keep it to a small fun bet.`} Back it each way, and only at ${price(best.ls.odds)} or longer.</p>`;
+  }
+
+  function render(d) {
+    data = d;
+    const m = d.meeting;
+    $("meta").innerHTML = `<span>Track <b>${esc(m.track_rating || "–")}</b></span>${m.weather ? `<span>${esc(m.weather)}</span>` : ""}<span>Updated ${new Date(m.updatedAt).toLocaleString("en-AU", { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>`;
+    const now = new Date();
+    if (current == null) {
+      const next = d.races.find(r => r.start_utc && new Date(r.start_utc) > now);
+      current = (next || d.races[d.races.length - 1] || {}).race;
+    }
+    $("racebar").innerHTML = d.races.map(r => {
+      const t = r.start_utc ? new Date(r.start_utc) : null;
+      return `<button aria-pressed="${r.race === current}" data-r="${r.race}" class="${t && t <= now ? "done" : ""}"><b>R${r.race}</b><span>${t ? t.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" }) : esc(r.time)}</span></button>`;
+    }).join("");
+    for (const b of $("racebar").querySelectorAll("button")) b.onclick = () => { current = Number(b.dataset.r); render(data); };
+    renderLongDay();
+    renderRace();
+    const rep = d.model_report;
+    if (rep) {
+      $("howPanel").hidden = false;
+      $("hRaces").textContent = rep.races;
+      const c = rep.cv;
+      $("hTest").innerHTML = `<thead><tr><th>${rep.races} races</th><th class="n">Log loss</th><th class="n">Top pick won</th></tr></thead><tbody>
+        <tr><td>Form model alone</td><td class="n">${c.model.toFixed(3)}</td><td class="n">${c.model_top}</td></tr>
+        <tr><td>Betting market (starting prices)</td><td class="n">${c.market.toFixed(3)}</td><td class="n">${c.market_top}</td></tr>
+        <tr><td>Model and market blended</td><td class="n">${c.blend.toFixed(3)}</td><td class="n">${c.blend_top}</td></tr>
+        <tr><td>Every horse equal</td><td class="n">${rep.test.uniform_logloss.toFixed(3)}</td><td class="n">–</td></tr></tbody>`;
+    }
+  }
+
+  (async () => {
+    const db = await Promise.resolve(window.claude?.use("db")).catch(() => null);
+    if (!db) { $("race").innerHTML = `<div class="empty">Sign in to Claude to load the races.</div>`; return; }
+    db.doc("cupday/current").onSnapshot(snap => {
+      if (!snap.exists) { $("race").innerHTML = `<div class="empty">The races haven't been loaded yet.</div>`; return; }
+      render(snap.data());
+    }, () => { $("race").innerHTML = `<div class="empty">Couldn't load the races. Reload to try again.</div>`; });
+  })();
+})();
+</script>
