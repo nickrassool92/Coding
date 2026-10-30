@@ -142,12 +142,18 @@ def main(model_path, out_path, prev_path=None, odds_path=None, cache=None):
             runners.append(row)
         runners.sort(key=lambda x: -x["win"])
         longshot = None
-        if priced:
-            cands = [x for x in runners if x["odds"] and x["odds"] >= LONGSHOT_MIN and x["place"] >= LONGSHOT_PLACE]
+        cands = [x for x in runners if x["odds"] and x["odds"] >= LONGSHOT_MIN and x["place"] >= LONGSHOT_PLACE]
+        if cands:
+            c = max(cands, key=lambda x: (x["win"] * x["odds"], x["place"]))
+            longshot = {"no": c["no"], "name": c["name"], "odds": c["odds"], "win": c["win"], "place": c["place"],
+                        "edge": round(c["win"] * c["odds"] - 1, 3), "basis": "market"}
+        elif not blended:
+            # No market prices found: the outsider the form model rates best to place among those it prices at $15+.
+            cands = [x for x in runners if x["fair_win"] >= LONGSHOT_MIN and x["place"] >= LONGSHOT_PLACE]
             if cands:
-                c = max(cands, key=lambda x: (x["win"] * x["odds"], x["place"]))
-                longshot = {"no": c["no"], "name": c["name"], "odds": c["odds"], "win": c["win"], "place": c["place"],
-                            "edge": round(c["win"] * c["odds"] - 1, 3)}
+                c = max(cands, key=lambda x: x["place"])
+                longshot = {"no": c["no"], "name": c["name"], "odds": None, "fair": c["fair_win"], "win": c["win"],
+                            "place": c["place"], "edge": None, "basis": "form"}
         races.append({"race": race["race"], "time": race["time"], "start_utc": jump.strftime("%Y-%m-%dT%H:%M:%SZ") if jump else None,
                       "name": race["name"], "distance": race["distance"], "prize": race["prize"], "class": race["class"],
                       "conditions": race.get("summary") or race["conditions"][:200], "places_paid": n_places, "field_size": len(field),
@@ -155,10 +161,13 @@ def main(model_path, out_path, prev_path=None, odds_path=None, cache=None):
                       "runners": runners, "longshot": longshot, "status": "open"})
 
     open_ls = [dict(r["longshot"], race=r["race"]) for r in races if r.get("longshot") and r["status"] == "open"]
+    market_ls = [x for x in open_ls if x["basis"] == "market"]
+    best_ls = (max(market_ls, key=lambda x: (x["edge"], x["place"])) if market_ls
+               else max(open_ls, key=lambda x: x["place"]) if open_ls else None)
     out = {"meeting": {"key": KEY, "date": RACE_DATE, "venue": "Flemington", "track_rating": rating + rating_note, "weather": scr["weather"],
                        "updatedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ")},
            "blend": [a, b], "model_report": mdl.get("report"), "races": sorted(races, key=lambda r: r["race"]),
-           "longshot_of_day": max(open_ls, key=lambda x: (x["edge"], x["place"])) if open_ls else None,
+           "longshot_of_day": best_ls,
            "odds_note": f"{sum(1 for r in races if r.get('odds_blended'))} of {len(races)} races priced" if odds else "no odds yet"}
     with open(out_path, "w") as f:
         json.dump(out, f, ensure_ascii=False)

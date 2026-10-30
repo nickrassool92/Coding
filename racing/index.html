@@ -125,7 +125,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
   <section class="panel" id="howPanel" hidden>
     <h2>How it works</h2>
     <p class="small">Each horse gets a score from its form: recent finishes and margins, the market's opinion of it last start, class rises and drops, weight, barrier, days since its last run, and its record at the distance, at Flemington and on today's track rating. The weights come from fitting the model on <span id="hRaces"></span> metro races in Melbourne and Sydney this year.</p>
-    <p class="small">The honest result: the betting market predicts better than form alone, and the form model added almost nothing on top of it. So when odds are in, the market leads (sharpened slightly towards favourites, because outsiders are over-bet) and the form model only nudges it. Without odds, the form model is used on its own. Enter the Sportsbet odds you see and the race recalculates on the spot. Place chances come from simulating the finishing order thousands of times.</p>
+    <p class="small">The honest result: the betting market predicts better than form alone, and the form model added almost nothing on top of it. So when odds are in, the market leads (sharpened slightly towards favourites, because outsiders are over-bet) and the form model only nudges it. Without odds, the form model is used on its own. Odds are gathered automatically from published markets on race morning and before the big races. Place chances come from simulating the finishing order thousands of times.</p>
     <div class="tablewrap"><table id="hTest"></table></div>
     <p class="small muted">Each race predicted by a model fitted on other meetings (5-fold cross-validation). Log loss measures how good the win chances were: lower is better.</p>
   </section>
@@ -139,52 +139,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
   const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const pct = x => (x * 100 >= 10 ? Math.round(x * 100) : (x * 100).toFixed(1)) + "%";
   const price = x => "$" + (x >= 100 ? Math.round(x) : x.toFixed(2));
-  const LONG_MIN = 15, LONG_PLACE = 0.12, MIN_PRICED = 0.8;
+  const LONG_MIN = 15;
   let data = null, current = null;
-  const LS = "cupday-odds-v1";
-  let mine = {};
-  try { mine = JSON.parse(localStorage.getItem(LS) || "{}") || {}; } catch {}
-  const saveMine = () => { try { localStorage.setItem(LS, JSON.stringify(mine)); } catch {} };
 
-  const softmax = s => { const m = Math.max(...s), e = s.map(x => Math.exp(x - m)), t = e.reduce((a, b) => a + b, 0); return e.map(x => x / t); };
-
-  // Same simulation as the server: winner by win chance, later places by flattened chances.
-  function places(p, n, sims = 4000) {
-    const later = p.map(x => Math.pow(x, 0.85)), cnt = p.map(() => 0);
-    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let s = 0; s < sims; s++) {
-      const left = p.map((_, i) => i); let w = p;
-      for (let k = 0; k < Math.min(n, p.length); k++) {
-        let tot = 0; for (const i of left) tot += w[i];
-        let r = rnd() * tot, pick = left[left.length - 1];
-        for (const i of left) { r -= w[i]; if (r <= 0) { pick = i; break; } }
-        cnt[pick]++; left.splice(left.indexOf(pick), 1); w = later;
-      }
-    }
-    return cnt.map(c => c / sims);
-  }
-
-  // Re-blend a race with the odds you typed in (yours override the race-morning prices).
   function view(race) {
-    const typed = mine[race.race] || {};
-    const odds = race.runners.map(r => Number(typed[r.no]) > 1 ? Number(typed[r.no]) : (r.odds || null));
-    const priced = odds.filter(Boolean).length;
-    const [a, b] = data.blend;
-    let runners = race.runners.map((r, i) => ({ ...r, odds: odds[i], mineOdds: Number(typed[r.no]) > 1 }));
-    const anyTyped = Object.keys(typed).length > 0;
-    if (anyTyped && priced >= MIN_PRICED * runners.length) {
-      const pm = softmax(runners.map(r => a * r.score));
-      const mk = runners.map((r, i) => r.odds || 1 / Math.max(1e-3, pm[i]));
-      const inv = mk.map(o => 1 / o), t = inv.reduce((x, y) => x + y, 0);
-      const p = softmax(runners.map((r, i) => a * r.score + b * Math.log(Math.max(1e-4, inv[i] / t))));
-      const pl = places(p, race.places_paid);
-      runners = runners.map((r, i) => ({ ...r, win: p[i], place: pl[i], fair_win: 1 / p[i], fair_place: 1 / pl[i] }));
-    }
-    runners.forEach(r => { r.value = r.odds ? r.win * r.odds : null; });
-    runners.sort((x, y) => y.win - x.win);
-    const cands = runners.filter(r => r.odds && r.odds >= LONG_MIN && r.place >= LONG_PLACE);
-    const longshot = cands.length ? cands.reduce((m, r) => (r.value > m.value ? r : m)) : null;
-    return { runners, priced, longshot, blended: (anyTyped && priced >= MIN_PRICED * runners.length) || race.odds_blended };
+    const runners = race.runners.slice().sort((x, y) => y.win - x.win);
+    return { runners, priced: race.priced || 0, longshot: race.longshot, blended: race.odds_blended };
   }
 
   function takeAt(p) { return Math.ceil(1.05 / p * 20) / 20; }
@@ -198,7 +158,8 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
     const timeTxt = jump ? jump.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" }) : race.time;
     const closed = race.status === "closed" || (jump && jump <= new Date());
     const ls = v.longshot;
-    const priceNote = v.priced ? `${v.priced} of ${race.field_size} runners priced${v.blended ? ", blended with the model" : " (need most of the field for a blend)"}` : "No odds yet: enter the Sportsbet odds you see to get value picks and a long shot.";
+    const priceNote = v.blended ? `Bookmaker prices found for ${v.priced} of ${race.field_size} runners and blended with the form model.`
+      : "No bookmaker prices found for this race yet, so these chances come from the form model alone. Odds are gathered automatically on race morning and before the big races.";
     $("race").innerHTML = `
       <section class="panel">
         <div>
@@ -211,8 +172,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
           <div class="pick win"><span class="label">Top pick to win</span><b>${top.no}. ${esc(top.name)}</b><span class="small">${pct(top.win)} to win · fair ${price(top.fair_win)} · take ${price(takeAt(top.win))}+</span></div>
           <div class="pick place"><span class="label">Safest place bet</span><b>${bestPlace.no}. ${esc(bestPlace.name)}</b><span class="small">${pct(bestPlace.place)} to place · fair place ${price(bestPlace.fair_place)}</span></div>
           <div class="pick long"><span class="label">Long shot</span>${ls
-            ? `<b>${ls.no}. ${esc(ls.name)}</b><span class="small">${price(ls.odds)} · ${pct(ls.win)} to win, ${pct(ls.place)} to place. ${ls.value >= 1 ? `Genuine value (${Math.round((ls.value - 1) * 100)}% edge). Each way, 0.5 to 1 unit.` : `Best of the outsiders but no edge at this price (${Math.round((1 - ls.value) * 100)}% short), so a small fun bet at most.`}</span>`
-            : `<span class="small">${v.priced ? `No outsider at $${LONG_MIN}+ has a real chance to place here. Skip it.` : "Needs prices. Add the Sportsbet odds below."}</span>`}</div>
+            ? (ls.basis === "form"
+              ? `<b>${ls.no}. ${esc(ls.name)}</b><span class="small">Form model rates it about ${price(ls.fair)} (${pct(ls.win)} to win, ${pct(ls.place)} to place). No market prices found, so only back it each way at ${price(ls.fair)} or longer, with a small stake.</span>`
+              : `<b>${ls.no}. ${esc(ls.name)}</b><span class="small">${price(ls.odds)} · ${pct(ls.win)} to win, ${pct(ls.place)} to place. ${ls.edge >= 0 ? `Genuine value (${Math.round(ls.edge * 100)}% edge). Each way, 0.5 to 1 unit.` : `Best of the outsiders but no edge at this price (${Math.round(-ls.edge * 100)}% short), so a small fun bet at most.`}</span>`)
+            : `<span class="small">No outsider at $${LONG_MIN}+ has a real chance to place here. Skip it.</span>`}</div>
         </div>
         <p class="small muted">${esc(priceNote)}</p>
       </section>
@@ -224,30 +187,23 @@ td.n, th.n { text-align: right; font-family: var(--mono); }
           <div class="bars" aria-hidden="true"><div class="bar"><span style="width:${Math.min(100, r.win * 100 * 2)}%"></span></div><div class="bar p"><span style="width:${r.place * 100}%"></span></div></div>
           <div class="prices">
             <span>Fair <b class="num">${price(r.fair_win)}</b> win · <b class="num">${price(r.fair_place)}</b> place</span>
-            <label class="small">Odds <input inputmode="decimal" type="number" step="0.05" min="1.01" data-no="${r.no}" value="${r.mineOdds ? r.odds : ""}" placeholder="${r.odds ? r.odds.toFixed(2) : "$"}" ${closed ? "disabled" : ""}></label>
+            ${r.odds ? `<span>Odds <b class="num">${price(r.odds)}</b></span>` : ""}
             ${r.value ? `<span class="${r.value >= 1.05 ? "value" : "novalue"}">${r.value >= 1.05 ? `Value: ${Math.round((r.value - 1) * 100)}% edge` : "No value at this price"}</span>` : ""}
           </div>
           ${r.notes?.length ? `<ul class="notes">${r.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
         </article>`).join("")}</div>`;
-    for (const inp of $("race").querySelectorAll("input[data-no]")) inp.onchange = () => {
-      const m = mine[race.race] || (mine[race.race] = {});
-      const val = Number(inp.value);
-      if (val > 1) m[inp.dataset.no] = val; else delete m[inp.dataset.no];
-      saveMine(); renderRace(); renderLongDay();
-    };
   }
 
   function renderLongDay() {
-    let best = null;
-    for (const race of data.races) {
-      const jump = race.start_utc ? new Date(race.start_utc) : null;
-      if (race.status === "closed" || (jump && jump <= new Date())) continue;
-      const ls = view(race).longshot;
-      if (ls && (!best || ls.value > best.ls.value)) best = { race, ls };
-    }
-    $("longday").hidden = !best;
-    if (best) $("longday").innerHTML = `<span class="label">Long shot of the day</span><h2>${best.ls.no}. ${esc(best.ls.name)} <span class="small muted">Race ${best.race.race}</span></h2>
-      <p class="small">${price(best.ls.odds)} with a ${pct(best.ls.win)} chance to win and ${pct(best.ls.place)} to place. ${best.ls.value >= 1 ? `That's about ${Math.round((best.ls.value - 1) * 100)}% better than the price suggests.` : `The price is about ${Math.round((1 - best.ls.value) * 100)}% shorter than its real chance, which is normal for outsiders, so keep it to a small fun bet.`} Back it each way, and only at ${price(best.ls.odds)} or longer.</p>`;
+    const ls = data.longshot_of_day;
+    const race = ls && data.races.find(r => r.race === ls.race);
+    const jump = race?.start_utc ? new Date(race.start_utc) : null;
+    $("longday").hidden = !ls || (jump && jump <= new Date());
+    if ($("longday").hidden) return;
+    $("longday").innerHTML = `<span class="label">Long shot of the day</span><h2>${ls.no}. ${esc(ls.name)} <span class="small muted">Race ${ls.race}</span></h2>
+      <p class="small">${ls.basis === "form"
+        ? `The form model rates it about ${price(ls.fair)}, with a ${pct(ls.win)} chance to win and ${pct(ls.place)} to place. No market prices were found, so only back it each way at ${price(ls.fair)} or longer, with a small stake.`
+        : `${price(ls.odds)} with a ${pct(ls.win)} chance to win and ${pct(ls.place)} to place. ${ls.edge >= 0 ? `That's about ${Math.round(ls.edge * 100)}% better than the price suggests.` : `The price is about ${Math.round(-ls.edge * 100)}% shorter than its real chance, which is normal for outsiders, so keep it to a small fun bet.`} Back it each way, and only at ${price(ls.odds)} or longer.`}</p>`;
   }
 
   function render(d) {
